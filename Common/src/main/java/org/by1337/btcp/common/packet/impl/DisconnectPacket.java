@@ -4,6 +4,7 @@ import org.by1337.btcp.common.annotations.PacketInfo;
 import org.by1337.btcp.common.io.ByteBuffer;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.PacketFlow;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -16,7 +17,7 @@ public class DisconnectPacket extends Packet {
 
     }
 
-    public DisconnectPacket(String reason) {
+    public DisconnectPacket(@NotNull String reason) {
         this.reason = reason;
     }
 

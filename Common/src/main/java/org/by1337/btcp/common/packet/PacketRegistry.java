@@ -56,54 +56,59 @@ public class PacketRegistry<T extends Packet> {
     }
 
     @SuppressWarnings("unchecked")
+    public Class<? extends Packet>[] packets(){
+        return lookupByClass.keySet().toArray(new Class[0]);
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T extends Packet> PacketRegistry<T> get() {
         return (PacketRegistry<T>) instance;
     }
 
     static {
-        PacketRegisterBuilder.get()
-                .of(PacketFlow.CLIENT_BOUND)
-                .register(DisconnectPacket.class, DisconnectPacket::new, "native:disconnect")
+        PacketTypeRegister.get()
+                .flow(PacketFlow.CLIENT_BOUND)
+                .add(DisconnectPacket.class, DisconnectPacket::new, "native:disconnect")
         ;
     }
 
-    public static class PacketRegisterBuilder<T extends Packet> {
+    public static class PacketTypeRegister<T extends Packet> {
         private final PacketRegistry<T> registry;
 
-        private PacketRegisterBuilder(PacketRegistry<T> registry) {
+        private PacketTypeRegister(PacketRegistry<T> registry) {
             this.registry = registry;
         }
 
-        public PacketTypeBuilderWithFlow of(PacketFlow flow) {
-            return new PacketTypeBuilderWithFlow(flow);
+        public PacketTypeRegisterWithFlow flow(PacketFlow flow) {
+            return new PacketTypeRegisterWithFlow(flow);
         }
 
-        public static <T extends Packet> PacketRegisterBuilder<T> get() {
-            return new PacketRegisterBuilder<>(PacketRegistry.get());
+        public static <T extends Packet> PacketTypeRegister<T> get() {
+            return new PacketTypeRegister<>(PacketRegistry.get());
         }
 
-        public class PacketTypeBuilderWithFlow {
+        public class PacketTypeRegisterWithFlow {
             private final PacketFlow flow;
 
-            private PacketTypeBuilderWithFlow(PacketFlow flow) {
+            private PacketTypeRegisterWithFlow(PacketFlow flow) {
                 this.flow = flow;
             }
 
-            public PacketTypeBuilderWithFlow register(@NotNull Class<? extends T> clazz, @NotNull Supplier<T> creator, @NotNull String name) {
-                return register(clazz, creator, SpacedName.parse(name));
+            public PacketTypeRegisterWithFlow add(@NotNull Class<? extends T> clazz, @NotNull Supplier<T> creator, @NotNull String name) {
+                return add(clazz, creator, SpacedName.parse(name));
             }
 
-            public PacketTypeBuilderWithFlow register(@NotNull Class<? extends T> clazz, @NotNull Supplier<T> creator, @NotNull String space, @NotNull String name) {
-                return register(clazz, creator, new SpacedName(space, name));
+            public PacketTypeRegisterWithFlow add(@NotNull Class<? extends T> clazz, @NotNull Supplier<T> creator, @NotNull String space, @NotNull String name) {
+                return add(clazz, creator, new SpacedName(space, name));
             }
 
-            public PacketTypeBuilderWithFlow register(@NotNull Class<? extends T> clazz, @NotNull Supplier<T> creator, @NotNull SpacedName id) {
+            public PacketTypeRegisterWithFlow add(@NotNull Class<? extends T> clazz, @NotNull Supplier<T> creator, @NotNull SpacedName id) {
                 registry.register(clazz, new PacketType<>(creator, id, flow));
                 return this;
             }
 
-            public PacketTypeBuilderWithFlow of(PacketFlow flow) {
-                return new PacketTypeBuilderWithFlow(flow);
+            public PacketTypeRegisterWithFlow flow(PacketFlow flow) {
+                return new PacketTypeRegisterWithFlow(flow);
             }
         }
     }

@@ -78,10 +78,7 @@
     </build>
 
     <repositories>
-        <!--        <repository>-->
-        <!--            <id>by1337</id>-->
-        <!--            <url>https://repo.by1337.space/repository/maven-releases/</url>-->
-        <!--        </repository>-->
+
     </repositories>
 
     <dependencies>
@@ -89,18 +86,21 @@
             <groupId>org.by1337.btcp.common</groupId>
             <artifactId>Common</artifactId>
             <version>1.0</version>
+            <scope>compile</scope>
         </dependency>
         <!-- logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
             <version>2.0.13</version>
+            <scope>compile</scope>
         </dependency>
         <!-- netty -->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>4.1.111.Final</version>
+            <scope>compile</scope>
         </dependency>
         <!--libs-->
         <dependency>

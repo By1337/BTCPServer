@@ -22,6 +22,7 @@ class PacketDecodeEncodeTest {
         DisconnectPacket read = (DisconnectPacket) buffer.readPacket();
 
         assertEquals(read, packet);
+        buffer.release();
     }
 
 }
