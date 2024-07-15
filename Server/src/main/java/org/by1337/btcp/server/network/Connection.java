@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
+import java.util.Objects;
 import java.util.logging.Level;
 
 public class Connection extends SimpleChannelInboundHandler<Packet> implements Client {
@@ -56,7 +57,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
             this.disconnect("Timed out");
         } else {
             this.disconnect("Internal Exception: " + cause);
-            LOGGER.error("Disconnect", cause);
+            LOGGER.error(String.format("An error occurred in the %s connection", this), cause);
         }
     }
 
@@ -100,5 +101,29 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
     @Override
     public boolean isDisconnected() {
         return disconnected;
+    }
+
+    @Override
+    public String toString() {
+        return "Connection{" +
+               "channel=" + channel +
+               ", address=" + address +
+               ", id='" + id + '\'' +
+               ", connected=" + connected +
+               ", disconnected=" + disconnected +
+               '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Connection that = (Connection) o;
+        return connected == that.connected && disconnected == that.disconnected && Objects.equals(channel, that.channel) && Objects.equals(address, that.address) && Objects.equals(id, that.id) && Objects.equals(server, that.server);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(channel, address, id, server, connected, disconnected);
     }
 }

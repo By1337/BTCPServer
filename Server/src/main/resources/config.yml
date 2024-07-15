@@ -5,3 +5,4 @@ server:
   debug: false
   clients:
     allow-anonymous-clients: true
+    secret-key: 'cfe285158af25f0baf9c31fd43c1b3d9369183c1df983a5b45f124cb35f86ae7'
