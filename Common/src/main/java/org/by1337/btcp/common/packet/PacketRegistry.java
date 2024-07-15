@@ -1,6 +1,6 @@
 package org.by1337.btcp.common.packet;
 
-import org.by1337.btcp.common.packet.impl.DisconnectPacket;
+import org.by1337.btcp.common.packet.impl.*;
 import org.by1337.btcp.common.util.id.SpacedName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,6 +69,9 @@ public class PacketRegistry<T extends Packet> {
         PacketTypeRegister.get()
                 .flow(PacketFlow.CLIENT_BOUND)
                 .add(DisconnectPacket.class, DisconnectPacket::new, "native:disconnect")
+                .add(PacketAuthResponse.class, PacketAuthResponse::new, "native:auth_response")
+                .flow(PacketFlow.SERVER_BOUND)
+                .add(PacketAuth.class, PacketAuth::new, "native:auth")
         ;
     }
 

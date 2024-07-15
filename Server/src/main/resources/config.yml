@@ -1,0 +1,7 @@
+server:
+  netty-threads: 6
+  port: 8080
+  password: 'password'
+  debug: false
+  clients:
+    allow-anonymous-clients: true
