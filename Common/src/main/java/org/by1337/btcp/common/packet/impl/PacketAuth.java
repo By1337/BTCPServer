@@ -31,7 +31,7 @@ public class PacketAuth extends Packet {
 
     @Override
     public void read(ByteBuffer byteBuf) throws IOException {
-        id = byteBuf.readUtf();
+        id = byteBuf.readOptional(ByteBuffer::readUtf).orElse(null);
         password = byteBuf.readUtf();
     }
 

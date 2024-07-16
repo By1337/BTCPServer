@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PacketDecodeEncodeTest {
 
+
     @Test
     void decodeEncodeTest() throws IOException {
         DisconnectPacket packet = new DisconnectPacket("test");

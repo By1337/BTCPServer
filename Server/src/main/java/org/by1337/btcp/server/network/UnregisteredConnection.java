@@ -61,6 +61,8 @@ public class UnregisteredConnection extends SimpleChannelInboundHandler<Packet> 
                 channel.pipeline().remove("auth");
 
                 Connection connection = new Connection(channel, address, id, server);
+                channel.pipeline().addLast("handler", connection);
+
                 server.getClientList().newClient(connection);
                 connection.send(new PacketAuthResponse(PacketAuthResponse.Response.SUCCESSFULLY));
             } else {
