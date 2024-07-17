@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
 import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.packet.impl.DisconnectPacket;
 import org.by1337.btcp.server.dedicated.DedicatedServer;
 import org.by1337.btcp.server.dedicated.client.Client;
 import org.slf4j.Logger;
@@ -33,7 +34,6 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
         this.id = id;
         this.server = server;
         connected = System.currentTimeMillis();
-        server.getClientList().newClient(this);
     }
 
     @Override
@@ -65,10 +65,13 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
     public void disconnect(String reason) {
         if (!disconnected) {
             try {
+                if (channel.isOpen()){
+                    send(new DisconnectPacket(reason));
+                }
                 this.channel.close().awaitUninterruptibly();
             } finally {
-                server.getClientList().disconnect(this, reason);
                 disconnected = true;
+                server.getClientList().disconnect(this, reason);
             }
         }
     }

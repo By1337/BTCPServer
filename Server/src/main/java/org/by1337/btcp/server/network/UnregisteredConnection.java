@@ -10,6 +10,7 @@ import org.by1337.btcp.common.packet.impl.PacketAuth;
 import org.by1337.btcp.common.packet.impl.PacketAuthResponse;
 import org.by1337.btcp.common.util.crypto.AESUtil;
 import org.by1337.btcp.server.dedicated.DedicatedServer;
+import org.by1337.btcp.server.event.ClientLoginEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,12 @@ public class UnregisteredConnection extends SimpleChannelInboundHandler<Packet> 
     }
 
     protected void read(ChannelHandlerContext ctx, Packet packet) throws Exception {
+        ClientLoginEvent loginEvent = new ClientLoginEvent(ctx, packet);
+        if (server.getEventManager().callEvent(loginEvent).isCanceled()){
+            String reason = Objects.requireNonNullElse(loginEvent.getReason(), "for no reason");
+            disconnect(ctx, reason);
+            return;
+        }
         if (packet instanceof PacketAuth auth) {
             if (password.equals(AESUtil.decrypt(auth.getPassword(), server.getConfig().getSecretKey()))) {
                 Optional<String> optId = auth.getId();
@@ -64,7 +71,7 @@ public class UnregisteredConnection extends SimpleChannelInboundHandler<Packet> 
                 channel.pipeline().addLast("handler", connection);
 
                 server.getClientList().newClient(connection);
-                connection.send(new PacketAuthResponse(PacketAuthResponse.Response.SUCCESSFULLY));
+                connection.send(new PacketAuthResponse(PacketAuthResponse.Response.SUCCESSFULLY, id));
             } else {
                 disconnect(ctx, "Wrong password!");
             }
@@ -98,7 +105,9 @@ public class UnregisteredConnection extends SimpleChannelInboundHandler<Packet> 
         if (ctx.channel().isOpen()) {
             DisconnectPacket packet1 = new DisconnectPacket(message);
             ctx.channel().writeAndFlush(packet1);
+
+            ctx.channel().close();
+            LOGGER.info("Disconnect unauthorized connection {}, reason: {}", ctx.channel().remoteAddress(), message);
         }
-        ctx.channel().close();
     }
 }

@@ -1,5 +1,6 @@
 package org.by1337.btcp.common.event;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.by1337.btcp.common.util.collection.LockableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,8 @@ public class EventManager {
         listeners.remove(listener);
     }
 
-    public void callEvent(Event event) {
+    @CanIgnoreReturnValue
+    public <T extends Event> T callEvent(T event) {
         listeners.lock();
         for (Listener listener : listeners) {
             try {
@@ -26,6 +28,7 @@ public class EventManager {
             }
         }
         listeners.unlock();
+        return event;
     }
 
 }

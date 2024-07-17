@@ -2,14 +2,23 @@ package org.by1337.btcp.common.util.crypto;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Base64;
 
 public class AESUtil {
     private static final String ALGORITHM = "AES";
 
     public static SecretKeySpec createKey(String keyString) {
-        byte[] keyBytes = keyString.getBytes();
-        return new SecretKeySpec(keyBytes, ALGORITHM);
+        try {
+            MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            byte[] keyBytes = sha.digest(keyString.getBytes(StandardCharsets.UTF_8));
+            keyBytes = Arrays.copyOf(keyBytes, 16);
+            return new SecretKeySpec(keyBytes, ALGORITHM);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String encrypt(String data, String keyString) {

@@ -34,6 +34,7 @@ public class Server {
     }
 
     public void start(boolean debug) {
+        LOGGER.info("Starting the server on port: {}", port);
         if (debug) {
             ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
         } else {

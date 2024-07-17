@@ -10,9 +10,11 @@ import java.util.Objects;
 @PacketInfo(packetFlow = PacketFlow.CLIENT_BOUND)
 public class PacketAuthResponse extends Packet {
     private Response response;
+    private String id;
 
-    public PacketAuthResponse(Response response) {
+    public PacketAuthResponse(Response response, String id) {
         this.response = response;
+        this.id = id;
     }
 
     public PacketAuthResponse() {
@@ -21,11 +23,13 @@ public class PacketAuthResponse extends Packet {
     @Override
     public void read(ByteBuffer byteBuf) throws IOException {
         response = byteBuf.readEnum(Response.class);
+        id = byteBuf.readUtf();
     }
 
     @Override
     public void write(ByteBuffer byteBuf) throws IOException {
         byteBuf.writeEnum(response);
+        byteBuf.writeUtf(id);
     }
 
     public enum Response {
@@ -35,6 +39,10 @@ public class PacketAuthResponse extends Packet {
 
     public Response getResponse() {
         return response;
+    }
+
+    public String getId() {
+        return id;
     }
 
     @Override

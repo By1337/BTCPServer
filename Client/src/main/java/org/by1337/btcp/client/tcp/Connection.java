@@ -1,0 +1,170 @@
+package org.by1337.btcp.client.tcp;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.*;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.TimeoutException;
+import org.by1337.btcp.common.codec.PacketDecoder;
+import org.by1337.btcp.common.codec.PacketEncoder;
+import org.by1337.btcp.common.codec.Varint21FrameDecoder;
+import org.by1337.btcp.common.codec.Varint21LengthFieldPrepender;
+import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.packet.PacketFlow;
+import org.by1337.btcp.common.packet.impl.DisconnectPacket;
+import org.by1337.btcp.common.packet.impl.PacketAuth;
+import org.by1337.btcp.common.packet.impl.PacketAuthResponse;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+
+import java.net.SocketAddress;
+import java.util.logging.Level;
+
+public class Connection extends SimpleChannelInboundHandler<Packet> {
+    private final Logger logger;
+    private final String ip;
+    private final int port;
+    private @Nullable String id;
+    private final String password;
+    private final String secretKey;
+    private ChannelFuture channelFuture;
+    private EventLoopGroup loopGroup;
+    private Channel channel;
+    private boolean running;
+    private boolean authorized;
+
+    public Connection(Logger logger, String ip, int port, @Nullable String id, String password, String secretKey) {
+        this.logger = logger;
+        this.ip = ip;
+        this.port = port;
+        this.id = id;
+        this.password = password;
+        this.secretKey = secretKey;
+    }
+
+    public void start(boolean debug) {
+        if (running) {
+            throw new IllegalStateException("client already started");
+        }
+        running = true;
+        Class<? extends SocketChannel> channelClass;
+        if (Epoll.isAvailable()) {
+            channelClass = EpollSocketChannel.class;
+            loopGroup = new EpollEventLoopGroup(0, new ThreadFactoryBuilder().setNameFormat("Netty Epoll Client IO #%d").setDaemon(true).build());
+            logger.info("Using epoll channel type");
+        } else {
+            channelClass = NioSocketChannel.class;
+            loopGroup = new NioEventLoopGroup(0, new ThreadFactoryBuilder().setNameFormat("Netty Client IO #%d").setDaemon(true).build());
+            logger.info("Using default channel type");
+        }
+        try {
+            channelFuture = new Bootstrap()
+                    .channel(channelClass)
+                    .handler(
+                            new ChannelInitializer<>() {
+                                @Override
+                                protected void initChannel(Channel channel) {
+                                    try {
+                                        channel.config().setOption(ChannelOption.TCP_NODELAY, true);
+                                    } catch (ChannelException ignore) {
+                                    }
+                                    channel.pipeline()
+                                            .addLast("splitter", new Varint21FrameDecoder())
+                                            .addLast("decoder", new PacketDecoder(debug, PacketFlow.CLIENT_BOUND))
+                                            .addLast("prepender", new Varint21LengthFieldPrepender())
+                                            .addLast("encoder", new PacketEncoder(debug, PacketFlow.SERVER_BOUND));
+                                    //  .addLast("auth", new ConnectionAuth(Connection.this));
+                                }
+                            }
+                    )
+                    .group(loopGroup)
+                    .connect(ip, port).syncUninterruptibly()
+                    .channel()
+                    .closeFuture();
+            channel = channelFuture.channel();
+        } catch (Exception e) {
+            logger.error("failed connect", e);
+            shutdown();
+            throw e;
+        }
+        PacketAuth auth = new PacketAuth(id, password, secretKey);
+        send(auth);
+    }
+
+    public void send(Packet packet) {
+        if (channel.isOpen()) {
+            channel.writeAndFlush(packet);
+        }
+    }
+
+    public void shutdown() {
+        if (!running) return;
+        running = false;
+        authorized = false;
+        logger.info("client shutdown");
+        try {
+            if (channelFuture != null) {
+                channelFuture.channel().close().sync();
+                channelFuture = null;
+            }
+        } catch (InterruptedException e) {
+            logger.error("Interrupted whilst closing channel");
+        } finally {
+            if (loopGroup != null){
+                loopGroup.shutdownGracefully();
+                loopGroup = null;
+            }
+        }
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Packet packet) throws Exception {
+        if (!authorized) {
+            if (packet instanceof PacketAuthResponse authResponse) {
+                if (authResponse.getResponse() == PacketAuthResponse.Response.SUCCESSFULLY) {
+                    id = authResponse.getId();
+                    authorized = true;
+                    logger.info("Successful authorization");
+                    return;
+                }
+            } else if (packet instanceof DisconnectPacket disconnectPacket) {
+                logger.error("Failed to authenticate. Reason: {}", disconnectPacket.getReason());
+            } else {
+                logger.error("Failed to authenticate");
+            }
+            shutdown();
+        }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        disconnect(ctx, "End of stream");
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        super.channelUnregistered(ctx);
+        disconnect(ctx, "connection unregister");
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (cause instanceof TimeoutException) {
+            this.disconnect(ctx, "Timed out");
+        } else {
+            this.disconnect(ctx, "Internal Exception: " + cause);
+            logger.error("An error occurred", cause);
+        }
+    }
+
+    private void disconnect(ChannelHandlerContext ctx, String message) {
+        ctx.channel().close();
+        ctx.channel().disconnect();
+        logger.info("Disconnected reason: {}", message);
+    }
+}

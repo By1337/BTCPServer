@@ -20,6 +20,7 @@ public class OptionParser {
     }
 
     public void parse(@NotNull String input) {
+        if (input.isBlank()) return;
         String[] arr = input.split(" ");
         String flag = null;
         for (String s : arr) {
