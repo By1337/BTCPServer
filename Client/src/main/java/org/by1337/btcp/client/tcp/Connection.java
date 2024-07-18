@@ -29,9 +29,9 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
     private final Logger logger;
     private final String ip;
     private final int port;
-    private @Nullable String id;
-    private final String password;
-    private final String secretKey;
+    @Nullable String id;
+    final String password;
+    final String secretKey;
     private ChannelFuture channelFuture;
     private EventLoopGroup loopGroup;
     private Channel channel;
@@ -77,8 +77,8 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
                                             .addLast("splitter", new Varint21FrameDecoder())
                                             .addLast("decoder", new PacketDecoder(debug, PacketFlow.CLIENT_BOUND))
                                             .addLast("prepender", new Varint21LengthFieldPrepender())
-                                            .addLast("encoder", new PacketEncoder(debug, PacketFlow.SERVER_BOUND));
-                                    //  .addLast("auth", new ConnectionAuth(Connection.this));
+                                            .addLast("encoder", new PacketEncoder(debug, PacketFlow.SERVER_BOUND))
+                                            .addLast("auth", new ConnectionAuth(Connection.this));
                                 }
                             }
                     )
@@ -92,8 +92,6 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
             shutdown();
             throw e;
         }
-        PacketAuth auth = new PacketAuth(id, password, secretKey);
-        send(auth);
     }
 
     public void send(Packet packet) {
@@ -107,6 +105,9 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
         running = false;
         authorized = false;
         logger.info("client shutdown");
+        synchronized (this){
+            notifyAll();
+        }
         try {
             if (channelFuture != null) {
                 channelFuture.channel().close().sync();
@@ -115,10 +116,17 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
         } catch (InterruptedException e) {
             logger.error("Interrupted whilst closing channel");
         } finally {
-            if (loopGroup != null){
+            if (loopGroup != null) {
                 loopGroup.shutdownGracefully();
                 loopGroup = null;
             }
+        }
+    }
+
+    void authorized() {
+        synchronized (this){
+            authorized = true;
+            notifyAll();
         }
     }
 
@@ -164,7 +172,22 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
 
     private void disconnect(ChannelHandlerContext ctx, String message) {
         ctx.channel().close();
-        ctx.channel().disconnect();
         logger.info("Disconnected reason: {}", message);
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public boolean isAuthorized() {
+        return authorized;
     }
 }

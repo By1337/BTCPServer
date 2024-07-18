@@ -204,7 +204,7 @@ public class ByteBuffer extends ByteBuf {
         return clazz.getEnumConstants()[readVarInt()];
     }
 
-    public <K, V> void writeMap(Map<K, V> source, BiConsumer<ByteBuffer, K> keySerializer, BiConsumer<ByteBuffer, V> valueSerializer) {
+    public <K, V> void writeMap(Map<K, V> source, ExceptionBiConsumer<ByteBuffer, K> keySerializer, ExceptionBiConsumer<ByteBuffer, V> valueSerializer) throws IOException {
         writeVarInt(source.size());
         for (Map.Entry<K, V> entry : source.entrySet()) {
             keySerializer.accept(this, entry.getKey());
@@ -212,7 +212,7 @@ public class ByteBuffer extends ByteBuf {
         }
     }
 
-    public <K, V> Map<K, V> readMap(Function<ByteBuffer, K> keyDeserializer, Function<ByteBuffer, V> valueDeserializer) {
+    public <K, V> Map<K, V> readMap(FunctionException<ByteBuffer, K> keyDeserializer, FunctionException<ByteBuffer, V> valueDeserializer) throws IOException {
         int size = readVarInt();
         Map<K, V> map = new HashMap<>(size);
         for (int i = 0; i < size; i++) {
@@ -221,7 +221,7 @@ public class ByteBuffer extends ByteBuf {
         return map;
     }
 
-    public <T> void writeOptional(@Nullable T val, BiConsumer<ByteBuffer, T> serializer) {
+    public <T> void writeOptional(@Nullable T val, ExceptionBiConsumer<ByteBuffer, T> serializer) throws IOException {
         if (val != null) {
             writeBoolean(true);
             serializer.accept(this, val);
@@ -230,7 +230,7 @@ public class ByteBuffer extends ByteBuf {
         }
     }
 
-    public <T> Optional<T> readOptional(Function<ByteBuffer, T> deserializer) {
+    public <T> Optional<T> readOptional(FunctionException<ByteBuffer, T> deserializer) throws IOException {
         if (readBoolean()) {
             return Optional.of(deserializer.apply(this));
         } else {
@@ -2923,5 +2923,14 @@ public class ByteBuffer extends ByteBuf {
     @Override
     public boolean release(int decrement) {
         return source.release(decrement);
+    }
+
+    @FunctionalInterface
+    public interface FunctionException<T, R> {
+        R apply(T t) throws IOException;
+    }
+    @FunctionalInterface
+    public interface ExceptionBiConsumer<T, U> {
+        void accept(T t, U u) throws IOException;
     }
 }

@@ -7,11 +7,13 @@ import org.by1337.blib.configuration.YamlConfig;
 import org.by1337.btcp.client.tcp.Connection;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.logging.Level;
 
 public class BTCPServer extends JavaPlugin {
     private Message message;
     private Connection connection;
+
     @Override
     public void onLoad() {
         message = new Message(getLogger());
@@ -25,7 +27,7 @@ public class BTCPServer extends JavaPlugin {
             if (id.equals("auto_gen")) {
                 id = null;
             }
-            Connection connection = new Connection(
+            connection = new Connection(
                     getSLF4JLogger(),
                     config.get("ip").getAsString(),
                     config.get("port").getAsInteger(),
@@ -33,10 +35,20 @@ public class BTCPServer extends JavaPlugin {
                     config.get("password").getAsString(),
                     config.get("secret-key").getAsString()
             );
+
             connection.start(true);
+            synchronized (connection) {
+                connection.wait(10_000);
+            }
+            if (!connection.isAuthorized()) {
+                throw new IllegalStateException("Failed to login!");
+            }
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "failed to enable", e);
             Bukkit.getServer().shutdown();
+            if (connection != null) {
+                connection.shutdown();
+            }
             return;
         }
     }
@@ -48,7 +60,7 @@ public class BTCPServer extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (connection != null){
+        if (connection != null && connection.isRunning()) {
             connection.shutdown();
         }
     }

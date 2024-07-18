@@ -38,6 +38,7 @@ public abstract class AbstractListener implements Listener {
                     continue;
                 }
                 Class<? extends Event> eventType = (Class<? extends Event>) clazz;
+                method.setAccessible(true);
                 handlers0.computeIfAbsent(eventType, k -> new ArrayList<>()).add(method);
             }
         }

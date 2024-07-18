@@ -1,6 +1,8 @@
 package org.by1337.btcp.common.packet;
 
+import org.by1337.btcp.common.annotations.PacketInfo;
 import org.by1337.btcp.common.packet.impl.*;
+import org.by1337.btcp.common.packet.impl.channel.*;
 import org.by1337.btcp.common.util.id.SpacedName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -70,8 +72,16 @@ public class PacketRegistry<T extends Packet> {
                 .flow(PacketFlow.CLIENT_BOUND)
                 .add(DisconnectPacket.class, DisconnectPacket::new, "native:disconnect")
                 .add(PacketAuthResponse.class, PacketAuthResponse::new, "native:auth_response")
+                .add(ChannelStatusPacket.class, ChannelStatusPacket::new, "native:channel_status")
                 .flow(PacketFlow.SERVER_BOUND)
                 .add(PacketAuth.class, PacketAuth::new, "native:auth")
+                .add(OpenChannelPacket.class, OpenChannelPacket::new, "native:open_channel")
+                .flow(PacketFlow.ANY)
+                .add(ChanneledPacket.class, ChanneledPacket::new, "native:channeled_packet")
+                .add(PacketPingRequest.class, PacketPingRequest::new, "native:ping_request")
+                .add(PacketPingResponse.class, PacketPingResponse::new, "native:ping_response")
+                .add(RequestPacket.class, RequestPacket::new, "native:request")
+                .add(ResponsePacket.class, ResponsePacket::new, "native:response")
         ;
     }
 

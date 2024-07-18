@@ -24,7 +24,7 @@ class EventManagerTest {
     static class ExampleListener extends AbstractListener {
         public boolean called;
         @EventHandler
-        public void on(ExampleEvent event){
+        private void on(ExampleEvent event){
             called = true;
         }
     }
