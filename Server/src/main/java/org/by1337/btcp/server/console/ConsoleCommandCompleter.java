@@ -26,14 +26,12 @@ public class ConsoleCommandCompleter implements Completer {
 
     @Override
     public void complete(LineReader lineReader, ParsedLine parsedLine, List<Candidate> list) {
-      //  final ParseResults<DedicatedServer> parse = commandManager.getRootCommand().parse(parsedLine.line(), server);
         final ParseResults<DedicatedServer> results = commandManager.getRootCommand().parse(prepareStringReader(parsedLine.line()), server);
         var result =  commandManager.getRootCommand().getCompletionSuggestions(results, parsedLine.cursor()).join().getList();
         for (Suggestion suggestion : result) {
             list.add(new Candidate(suggestion.getText()));
         }
     }
-
 
 
     static @NonNull StringReader prepareStringReader(final @NonNull String line) {
