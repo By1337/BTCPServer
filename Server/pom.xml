@@ -94,7 +94,11 @@
     </build>
 
     <repositories>
-
+        <repository>
+            <id>minecraft-libraries</id>
+            <name>Minecraft Libraries</name>
+            <url>https://libraries.minecraft.net</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -146,6 +150,12 @@
             <artifactId>netty-all</artifactId>
             <version>4.1.111.Final</version>
             <scope>compile</scope>
+        </dependency>
+        <!--commands-->
+        <dependency>
+            <groupId>com.mojang</groupId>
+            <artifactId>brigadier</artifactId>
+            <version>1.0.18</version>
         </dependency>
         <!--libs-->
         <dependency>

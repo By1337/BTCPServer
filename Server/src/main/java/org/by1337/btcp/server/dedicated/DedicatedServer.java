@@ -3,6 +3,8 @@ package org.by1337.btcp.server.dedicated;
 import org.by1337.btcp.common.event.EventManager;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.util.id.SpacedName;
+import org.by1337.btcp.server.commands.CommandManager;
+import org.by1337.btcp.server.console.TcpConsole;
 import org.by1337.btcp.server.dedicated.client.Client;
 import org.by1337.btcp.server.dedicated.client.ClientList;
 import org.by1337.btcp.server.network.Server;
@@ -28,6 +30,9 @@ public class DedicatedServer {
     private final EventManager eventManager;
     private final Server server;
     private final ServerChannelManager serverChannelManager;
+    private final CommandManager commandManager;
+    private volatile boolean stopped;
+
     public DedicatedServer(OptionParser parser) throws YamlContext.YamlParserException, IOException {
         TimeCounter timeCounter = new TimeCounter();
 
@@ -41,17 +46,27 @@ public class DedicatedServer {
         eventManager = new EventManager();
         serverChannelManager = new ServerChannelManager(this);
         new MainServerChannel(serverChannelManager, new SpacedName("native", "main")).register();
+        commandManager = new CommandManager(this);
 
         server = new Server(port, password, this);
         server.start(debug);
-        LOGGER.info("Done in (" + timeCounter.getTimeFormat() + ")");
-        while (true){
+        LOGGER.info("Done in ({})", timeCounter.getTimeFormat());
 
-        }
+        TcpConsole tcpConsole = new TcpConsole(this, commandManager);
+        tcpConsole.start();
     }
-    public void onPacket(Packet packet, Client client){
+
+    public void onPacket(Packet packet, Client client) {
         serverChannelManager.onPacket(packet, client);
     }
+
+    public void shutdown() {
+        LOGGER.info("shutdown");
+        stopped = true;
+        server.stop();
+        System.exit(0);
+    }
+
 
     public ClientList getClientList() {
         return clientList;
@@ -75,5 +90,9 @@ public class DedicatedServer {
 
     public ServerChannelManager getServerChannelManager() {
         return serverChannelManager;
+    }
+
+    public boolean isStopped() {
+        return stopped;
     }
 }

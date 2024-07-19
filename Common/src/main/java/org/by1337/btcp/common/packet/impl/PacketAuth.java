@@ -68,8 +68,8 @@ public class PacketAuth extends Packet {
     public String toString() {
         return "PacketAuth{" +
                "id='" + id + '\'' +
-               ", password='" + password + '\'' +
-               ", secretKey='" + secretKey + '\'' +
+               ", password='***'" +
+               ", secretKey='***'" +
                '}';
     }
 }

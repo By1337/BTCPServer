@@ -45,7 +45,7 @@ public class BTCPServer extends JavaPlugin implements ConnectionStatusListener {
                     this
             );
 
-            connection.start(true);
+            connection.start(config.get("debug").getAsBoolean(false));
             synchronized (connection) {
                 connection.wait(10_000);
             }
