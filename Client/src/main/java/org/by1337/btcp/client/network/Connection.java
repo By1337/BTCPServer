@@ -1,4 +1,4 @@
-package org.by1337.btcp.client.tcp;
+package org.by1337.btcp.client.network;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.bootstrap.Bootstrap;
@@ -10,6 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.TimeoutException;
+import org.by1337.btcp.client.BTCPServer;
 import org.by1337.btcp.common.codec.PacketDecoder;
 import org.by1337.btcp.common.codec.PacketEncoder;
 import org.by1337.btcp.common.codec.Varint21FrameDecoder;
@@ -17,13 +18,9 @@ import org.by1337.btcp.common.codec.Varint21LengthFieldPrepender;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.PacketFlow;
 import org.by1337.btcp.common.packet.impl.DisconnectPacket;
-import org.by1337.btcp.common.packet.impl.PacketAuth;
 import org.by1337.btcp.common.packet.impl.PacketAuthResponse;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
-
-import java.net.SocketAddress;
-import java.util.logging.Level;
 
 public class Connection extends SimpleChannelInboundHandler<Packet> {
     private final Logger logger;
@@ -37,14 +34,16 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
     private Channel channel;
     private boolean running;
     private boolean authorized;
+    private final ConnectionStatusListener statusListener;
 
-    public Connection(Logger logger, String ip, int port, @Nullable String id, String password, String secretKey) {
+    public Connection(Logger logger, String ip, int port, @Nullable String id, String password, String secretKey, ConnectionStatusListener statusListener) {
         this.logger = logger;
         this.ip = ip;
         this.port = port;
         this.id = id;
         this.password = password;
         this.secretKey = secretKey;
+        this.statusListener = statusListener;
     }
 
     public void start(boolean debug) {
@@ -102,10 +101,11 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
 
     public void shutdown() {
         if (!running) return;
+        statusListener.onDisconnect();
         running = false;
         authorized = false;
         logger.info("client shutdown");
-        synchronized (this){
+        synchronized (this) {
             notifyAll();
         }
         try {
@@ -124,7 +124,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
     }
 
     void authorized() {
-        synchronized (this){
+        synchronized (this) {
             authorized = true;
             notifyAll();
         }
@@ -146,6 +146,8 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
                 logger.error("Failed to authenticate");
             }
             shutdown();
+        } else {
+            statusListener.onPacket(packet);
         }
     }
 
@@ -172,6 +174,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
 
     private void disconnect(ChannelHandlerContext ctx, String message) {
         ctx.channel().close();
+        shutdown();
         logger.info("Disconnected reason: {}", message);
     }
 

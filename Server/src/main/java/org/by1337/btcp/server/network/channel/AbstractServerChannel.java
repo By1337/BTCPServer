@@ -1,6 +1,7 @@
 package org.by1337.btcp.server.network.channel;
 
 import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.packet.impl.RequestPacket;
 import org.by1337.btcp.common.packet.impl.ResponsePacket;
 import org.by1337.btcp.common.packet.impl.channel.ChanneledPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
@@ -27,11 +28,11 @@ public abstract class AbstractServerChannel {
         this.spacedName = spacedName;
     }
 
-    protected void register() {
+    public void register() {
         serverChannelManager.registerChannel(spacedName, this);
     }
 
-    protected void unregister() {
+    public void unregister() {
         serverChannelManager.unregisterChannel(spacedName);
     }
 
@@ -53,7 +54,7 @@ public abstract class AbstractServerChannel {
             requestMap.put(uid, future);
             requestMapByClient.computeIfAbsent(client.getId(), k -> new HashSet<>()).add(uid);
         }
-        client.send(new ChanneledPacket(spacedName, packet));
+        client.send(new ChanneledPacket(spacedName, new RequestPacket(uid, packet)));
         scheduler.schedule(() -> response(uid, client.getId(), null), timeout, timeUnit);
         return future;
     }
@@ -68,9 +69,6 @@ public abstract class AbstractServerChannel {
         CompletableFuture<Optional<Packet>> future;
         synchronized (this) {
             future = requestMap.remove(uid);
-            if (future != null) {
-                future.complete(Optional.ofNullable(response));
-            }
             Set<Integer> clientRequests = requestMapByClient.get(clientId);
             if (clientRequests != null) {
                 clientRequests.remove(uid);
@@ -78,6 +76,9 @@ public abstract class AbstractServerChannel {
                     requestMapByClient.remove(clientId);
                 }
             }
+        }
+        if (future != null) {
+            future.complete(Optional.ofNullable(response));
         }
     }
 

@@ -38,7 +38,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Packet packet) throws Exception {
-
+        server.onPacket(packet, this);
     }
 
     @Override

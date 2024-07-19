@@ -76,6 +76,7 @@ public class PacketRegistry<T extends Packet> {
                 .flow(PacketFlow.SERVER_BOUND)
                 .add(PacketAuth.class, PacketAuth::new, "native:auth")
                 .add(OpenChannelPacket.class, OpenChannelPacket::new, "native:open_channel")
+                .add(CloseChannelPacket.class, CloseChannelPacket::new, "native:close_channel")
                 .flow(PacketFlow.ANY)
                 .add(ChanneledPacket.class, ChanneledPacket::new, "native:channeled_packet")
                 .add(PacketPingRequest.class, PacketPingRequest::new, "native:ping_request")

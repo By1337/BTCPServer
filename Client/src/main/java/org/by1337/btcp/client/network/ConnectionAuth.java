@@ -1,4 +1,4 @@
-package org.by1337.btcp.client.tcp;
+package org.by1337.btcp.client.network;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -13,8 +13,6 @@ import org.by1337.btcp.common.packet.impl.PacketAuth;
 import org.by1337.btcp.common.packet.impl.PacketAuthResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.SocketAddress;
 
 @ChannelHandler.Sharable
 public class ConnectionAuth extends SimpleChannelInboundHandler<Packet> {

@@ -7,6 +7,7 @@ import org.by1337.btcp.common.packet.impl.RequestPacket;
 import org.by1337.btcp.common.packet.impl.ResponsePacket;
 import org.by1337.btcp.common.packet.impl.channel.ChannelStatusPacket;
 import org.by1337.btcp.common.packet.impl.channel.ChanneledPacket;
+import org.by1337.btcp.common.packet.impl.channel.CloseChannelPacket;
 import org.by1337.btcp.common.packet.impl.channel.OpenChannelPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
 import org.by1337.btcp.server.dedicated.DedicatedServer;
@@ -24,7 +25,6 @@ public class ServerChannelManager extends AbstractListener {
     private final Map<SpacedName, Set<Client>> clientMap = new HashMap<>();
     private final Map<String, Set<SpacedName>> channelsByClient = new HashMap<>();
     private final DedicatedServer server;
-
 
     public ServerChannelManager(DedicatedServer server) {
         this.server = server;
@@ -60,11 +60,7 @@ public class ServerChannelManager extends AbstractListener {
         }
     }
 
-    public void send(SpacedName spacedName, Client client, Packet packet) {
-        client.send(new ChanneledPacket(spacedName, packet));
-    }
-
-    public void sendAll(SpacedName spacedName, Packet packet) {
+    private void sendAll(SpacedName spacedName, Packet packet) {
         for (Client client : getClientsByChannel(spacedName)) {
             client.send(new ChanneledPacket(spacedName, packet));
         }
@@ -93,14 +89,15 @@ public class ServerChannelManager extends AbstractListener {
                 client.disconnect(String.format("Channel %s does not exist!", channeledPacket.getChannel()));
                 return;
             }
-            if (in instanceof ResponsePacket responsePacket) {
-                channel.onResponse(responsePacket, client);
-            } else if (in instanceof RequestPacket requestPacket) {
-                Packet request = requestPacket.getPacket();
-                Packet response = channel.onRequest(request, channeledClient);
-                channeledClient.send(new ResponsePacket(requestPacket.getUid(), response));
-            } else {
-                channel.onPacket(in, channeledClient);
+            switch (in) {
+                case ResponsePacket responsePacket -> channel.onResponse(responsePacket, client);
+                case RequestPacket requestPacket -> {
+                    Packet request = requestPacket.getPacket();
+                    Packet response = channel.onRequest(request, channeledClient);
+                    channeledClient.send(new ResponsePacket(requestPacket.getUid(), response));
+                }
+                case CloseChannelPacket closeChannelPacket -> closeChannel(client, channel);
+                case null, default -> channel.onPacket(in, channeledClient);
             }
         } else {
             LOGGER.error("Client {} sent a packet {} that was not expected.", client.getId(), packet);
@@ -125,6 +122,13 @@ public class ServerChannelManager extends AbstractListener {
             }
             channelsByClient.remove(event.getClient().getId());
         }
+    }
+
+    private void closeChannel(Client client, AbstractServerChannel channel) {
+        synchronized (this) {
+            channelsByClient.remove(client.getId());
+        }
+        channel.onDisconnect0(client);
     }
 
 }

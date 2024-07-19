@@ -4,18 +4,26 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.by1337.blib.chat.util.Message;
 import org.by1337.blib.configuration.YamlConfig;
-import org.by1337.btcp.client.tcp.Connection;
+import org.by1337.btcp.client.network.Connection;
+import org.by1337.btcp.client.network.ConnectionStatusListener;
+import org.by1337.btcp.client.network.channel.ClientChannelManager;
+import org.by1337.btcp.client.network.channel.impl.MainClientChannel;
+import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.packet.impl.channel.ChannelStatusPacket;
+import org.by1337.btcp.common.util.id.SpacedName;
 
 import java.io.File;
-import java.util.Objects;
 import java.util.logging.Level;
 
-public class BTCPServer extends JavaPlugin {
+public class BTCPServer extends JavaPlugin implements ConnectionStatusListener {
     private Message message;
+    private static BTCPServer instance;
     private Connection connection;
+    private ClientChannelManager clientChannelManager;
 
     @Override
     public void onLoad() {
+        instance = this;
         message = new Message(getLogger());
         File cfg = new File(getDataFolder() + "/config.yml");
         if (!cfg.exists()) {
@@ -33,7 +41,8 @@ public class BTCPServer extends JavaPlugin {
                     config.get("port").getAsInteger(),
                     id,
                     config.get("password").getAsString(),
-                    config.get("secret-key").getAsString()
+                    config.get("secret-key").getAsString(),
+                    this
             );
 
             connection.start(true);
@@ -43,6 +52,13 @@ public class BTCPServer extends JavaPlugin {
             if (!connection.isAuthorized()) {
                 throw new IllegalStateException("Failed to login!");
             }
+            clientChannelManager = new ClientChannelManager(connection);
+            MainClientChannel mainClientChannel = new MainClientChannel(clientChannelManager, new SpacedName("native", "main"));
+            mainClientChannel.register().sync(5_000);
+            if (mainClientChannel.getStatus() != ChannelStatusPacket.ChannelStatus.OPENED) {
+                mainClientChannel.unregister();
+                throw new IllegalStateException("Failed to open channel native:main");
+            }
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "failed to enable", e);
             Bukkit.getServer().shutdown();
@@ -51,6 +67,14 @@ public class BTCPServer extends JavaPlugin {
             }
             return;
         }
+    }
+
+    public void onPacket(Packet packet) {
+        clientChannelManager.onPacket(packet);
+    }
+
+    public void onDisconnect() {
+        Bukkit.getServer().shutdown();
     }
 
     @Override
@@ -65,5 +89,11 @@ public class BTCPServer extends JavaPlugin {
         }
     }
 
+    public static Connection getConnection() {
+        return instance.connection;
+    }
 
+    public static ClientChannelManager getClientChannelManager() {
+        return instance.clientChannelManager;
+    }
 }

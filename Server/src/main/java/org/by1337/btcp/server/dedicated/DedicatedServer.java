@@ -1,8 +1,13 @@
 package org.by1337.btcp.server.dedicated;
 
 import org.by1337.btcp.common.event.EventManager;
+import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.util.id.SpacedName;
+import org.by1337.btcp.server.dedicated.client.Client;
 import org.by1337.btcp.server.dedicated.client.ClientList;
 import org.by1337.btcp.server.network.Server;
+import org.by1337.btcp.server.network.channel.ServerChannelManager;
+import org.by1337.btcp.server.network.channel.impl.MainServerChannel;
 import org.by1337.btcp.server.util.OptionParser;
 import org.by1337.btcp.server.util.resource.ResourceUtil;
 import org.by1337.btcp.server.util.time.TimeCounter;
@@ -22,6 +27,7 @@ public class DedicatedServer {
     private final ClientList clientList;
     private final EventManager eventManager;
     private final Server server;
+    private final ServerChannelManager serverChannelManager;
     public DedicatedServer(OptionParser parser) throws YamlContext.YamlParserException, IOException {
         TimeCounter timeCounter = new TimeCounter();
 
@@ -33,6 +39,9 @@ public class DedicatedServer {
         config = new Config(context);
         clientList = new ClientList();
         eventManager = new EventManager();
+        serverChannelManager = new ServerChannelManager(this);
+        new MainServerChannel(serverChannelManager, new SpacedName("native", "main")).register();
+
         server = new Server(port, password, this);
         server.start(debug);
         LOGGER.info("Done in (" + timeCounter.getTimeFormat() + ")");
@@ -40,7 +49,9 @@ public class DedicatedServer {
 
         }
     }
-
+    public void onPacket(Packet packet, Client client){
+        serverChannelManager.onPacket(packet, client);
+    }
 
     public ClientList getClientList() {
         return clientList;
@@ -60,5 +71,9 @@ public class DedicatedServer {
 
     public EventManager getEventManager() {
         return eventManager;
+    }
+
+    public ServerChannelManager getServerChannelManager() {
+        return serverChannelManager;
     }
 }

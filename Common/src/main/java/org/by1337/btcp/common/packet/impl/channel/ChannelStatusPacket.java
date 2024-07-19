@@ -1,12 +1,13 @@
 package org.by1337.btcp.common.packet.impl.channel;
 
+import org.by1337.btcp.common.annotations.OnlyInChannel;
 import org.by1337.btcp.common.annotations.PacketInfo;
 import org.by1337.btcp.common.io.ByteBuffer;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.PacketFlow;
 
 import java.io.IOException;
-
+@OnlyInChannel
 @PacketInfo(packetFlow = PacketFlow.CLIENT_BOUND)
 public class ChannelStatusPacket extends Packet {
     private ChannelStatus status;
