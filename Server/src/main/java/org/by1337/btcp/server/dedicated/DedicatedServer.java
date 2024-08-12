@@ -50,7 +50,7 @@ public class DedicatedServer {
         new MainServerChannel(serverChannelManager, new SpacedName("native", "main")).register();
         commandManager = new CommandManager(this);
 
-        addonLoader = new AddonLoader(new File("./addons"));
+        addonLoader = new AddonLoader(new File("./addons"), this);
         addonLoader.onLoadPingAll();
 
         server = new Server(port, password, this);

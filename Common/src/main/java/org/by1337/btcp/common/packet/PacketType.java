@@ -16,7 +16,7 @@ public final class PacketType<T extends Packet> {
         this.creator = creator;
         this.id = id;
         this.flow = flow;
-        intId = id.hashCode();
+        intId = id.getAsInt();
     }
 
     public static <T extends Packet> Builder<T> builder() {

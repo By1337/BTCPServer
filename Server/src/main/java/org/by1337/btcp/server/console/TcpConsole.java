@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.logging.Level;
 
 public class TcpConsole {
     private static final Logger LOGGER = LoggerFactory.getLogger(TcpConsole.class);
@@ -51,7 +50,7 @@ public class TcpConsole {
                     break;
                 }
 
-                this.processInput(line);
+                this.processInput(line.trim());
             }
         } catch (UserInterruptException var10) {
             throw new RuntimeException(var10);

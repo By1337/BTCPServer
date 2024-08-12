@@ -1,6 +1,7 @@
 package org.by1337.btcp.server.addon;
 
 
+import org.by1337.btcp.server.dedicated.DedicatedServer;
 import org.by1337.btcp.server.yaml.YamlContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,9 +28,11 @@ public class AddonLoader {
     private final List<AddonClassLoader> loaders = new CopyOnWriteArrayList<>();
     //private final List<URLClassLoader> libs = new CopyOnWriteArrayList<>();
     private final AddonInitializer addonInitializer;
+    private final DedicatedServer server;
 
-    public AddonLoader(@NotNull File dir) {
+    public AddonLoader(@NotNull File dir, DedicatedServer server) {
         this.dir = dir;
+        this.server = server;
         if (!dir.exists()){
             dir.mkdirs();
         }
@@ -50,7 +53,7 @@ public class AddonLoader {
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
         }
-        AddonClassLoader loader = new AddonClassLoader(AddonLoader.class.getClassLoader(), description, dataFolder, file, this);
+        AddonClassLoader loader = new AddonClassLoader(AddonLoader.class.getClassLoader(), description, dataFolder, file, this, server);
         JavaAddon addon = loader.getAddon();
         addons.put(addon.getName(), addon);
         loaders.add(loader);
@@ -147,10 +150,10 @@ public class AddonLoader {
     public static YamlContext readFileContentFromJar(String jar) throws IOException {
         try (JarFile jarFile = new JarFile(jar)) {
             JarEntry entry = jarFile.getJarEntry("addon.yml");
-            if (entry != null) {
-                try (InputStream inputStream = jarFile.getInputStream(entry);
-                     InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                     BufferedReader reader = new BufferedReader(inputStreamReader)) {
+            if (entry != null) {try (InputStream inputStream = jarFile.getInputStream(entry);
+                                     InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                                     BufferedReader reader = new BufferedReader(inputStreamReader)) {
+
                     StringBuilder content = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null) {

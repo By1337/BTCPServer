@@ -1,5 +1,6 @@
 package org.by1337.btcp.server.addon;
 
+import org.by1337.btcp.server.dedicated.DedicatedServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -19,9 +20,7 @@ public interface Addon {
     void saveResource(@NotNull String file, boolean replace);
 
     @NotNull
-    default Logger getLogger() {
-        return LoggerFactory.getLogger(getName());
-    }
+    Logger getLogger();
 
     @NotNull
     String getName();
@@ -36,4 +35,6 @@ public interface Addon {
 
     @NotNull
     AddonDescriptionFile getDescription();
+
+    DedicatedServer getServer();
 }

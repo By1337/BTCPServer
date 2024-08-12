@@ -1,6 +1,7 @@
 package org.by1337.btcp.server.addon;
 
 
+import org.by1337.btcp.server.dedicated.DedicatedServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,9 +23,10 @@ public class AddonClassLoader extends URLClassLoader {
     private final JarFile jar;
     private final JavaAddon addon;
     private final AddonLoader loader;
+    private final DedicatedServer server;
     private final Set<String> seenIllegalAccess = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    public AddonClassLoader(@Nullable ClassLoader parent, AddonDescriptionFile description, File dataFolder, File file, AddonLoader loader) throws IOException, InvalidAddonException {
+    public AddonClassLoader(@Nullable ClassLoader parent, AddonDescriptionFile description, File dataFolder, File file, AddonLoader loader, DedicatedServer server) throws IOException, InvalidAddonException {
         super(new URL[]{file.toURI().toURL()}, parent);
 
         this.description = description;
@@ -33,6 +35,7 @@ public class AddonClassLoader extends URLClassLoader {
         this.file = file;
         this.jar = new JarFile(file);
         this.loader = loader;
+        this.server = server;
 
         try {
             Class<?> jarClass;
@@ -62,7 +65,7 @@ public class AddonClassLoader extends URLClassLoader {
         if (module.getClass().getClassLoader() != this) {
             throw new IllegalArgumentException("Cannot initialize module outside of this class loader");
         }
-        module.init(dataFolder, description.getName(), description, this, file);
+        module.init(dataFolder, description.getName(), description, this, file, server);
     }
 
     @Override

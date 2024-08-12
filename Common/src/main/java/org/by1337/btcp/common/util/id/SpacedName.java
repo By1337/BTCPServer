@@ -1,5 +1,6 @@
 package org.by1337.btcp.common.util.id;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -40,6 +41,20 @@ public class SpacedName {
         if (!pattern.matcher(input).matches()) {
             throw new IllegalArgumentException(message.get());
         }
+    }
+
+    public int getAsInt() {
+        byte[] arr = space.getBytes(StandardCharsets.UTF_8);
+        byte[] arr1 = name.getBytes(StandardCharsets.UTF_8);
+
+        int result = 1;
+        for (byte b : arr) {
+            result = 31 * result + b;
+        }
+        for (byte b : arr1) {
+            result = 31 * result + b;
+        }
+        return result;
     }
 
     @Override

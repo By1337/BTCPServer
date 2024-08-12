@@ -1,6 +1,7 @@
 package org.by1337.btcp.server.addon;
 
 
+import org.by1337.btcp.server.dedicated.DedicatedServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ public abstract class JavaAddon implements Addon {
     private AddonDescriptionFile descriptionFile;
     private ClassLoader classLoader;
     private File file;
+    private DedicatedServer server;
 
     public JavaAddon() {
         ClassLoader classLoader = this.getClass().getClassLoader();
@@ -29,13 +31,19 @@ public abstract class JavaAddon implements Addon {
         }
     }
 
-    final void init(File dataFolder, String name, AddonDescriptionFile descriptionFile, ClassLoader classLoader, File file) {
+    final void init(File dataFolder, String name, AddonDescriptionFile descriptionFile, ClassLoader classLoader, File file, DedicatedServer server) {
         this.dataFolder = dataFolder;
         this.name = name;
         this.descriptionFile = descriptionFile;
         this.classLoader = classLoader;
         this.file = file;
-        logger = LoggerFactory.getLogger(name);
+        this.server = server;
+        logger = new AddonLogger(LoggerFactory.getLogger(name), "[" + name + "]");
+    }
+
+    @Override
+    public DedicatedServer getServer() {
+        return server;
     }
 
     @NotNull
