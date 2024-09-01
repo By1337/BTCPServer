@@ -2,6 +2,7 @@ package org.by1337.btcp.client.network.channel;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.packet.impl.EncryptedPacket;
 import org.by1337.btcp.common.packet.impl.RequestPacket;
 import org.by1337.btcp.common.packet.impl.channel.ChannelStatusPacket;
 import org.by1337.btcp.common.packet.impl.channel.ChanneledPacket;
@@ -72,6 +73,10 @@ public abstract class AbstractClientChannel {
 
     public void send(Packet packet) {
         clientChannelManager.getConnection().send(new ChanneledPacket(spacedName, packet));
+    }
+
+    public void sendEncrypted(Packet packet) {
+        send(new EncryptedPacket(packet));
     }
 
     public SpacedName getId() {

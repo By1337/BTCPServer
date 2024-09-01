@@ -2,6 +2,7 @@ package org.by1337.btcp.server.dedicated;
 
 import org.by1337.btcp.common.event.EventManager;
 import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.packet.impl.EncryptedPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
 import org.by1337.btcp.server.addon.AddonLoader;
 import org.by1337.btcp.server.commands.CommandManager;
@@ -44,6 +45,7 @@ public class DedicatedServer {
         port = Integer.parseInt(parser.getOrDefault("port", context.get("server.port").getAsString()));
         System.setProperty("io.netty.eventLoopThreads", context.get("server.netty-threads").getAsString("6"));
         config = new Config(context);
+        EncryptedPacket.setSecretKey(config.getSecretKey());
         clientList = new ClientList();
         eventManager = new EventManager();
         serverChannelManager = new ServerChannelManager(this);

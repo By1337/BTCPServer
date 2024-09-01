@@ -9,6 +9,7 @@ import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.PacketFlow;
 import org.by1337.btcp.common.packet.PacketRegistry;
 import org.by1337.btcp.common.packet.PacketType;
+import org.by1337.btcp.common.packet.impl.EncryptedPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -48,6 +49,9 @@ public class PacketDecoder extends ByteToMessageDecoder {
         }
         if (debug) {
             LOGGER.info(MARKER, "IN: [{}:({})] {}", packet.getClass().getSimpleName(), type.getId(), packet);
+        }
+        if (packet instanceof EncryptedPacket encryptedPacket) {
+            return encryptedPacket.getPacket();
         }
         return packet;
     }

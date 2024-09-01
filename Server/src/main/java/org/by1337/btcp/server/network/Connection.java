@@ -6,6 +6,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.impl.DisconnectPacket;
+import org.by1337.btcp.common.packet.impl.EncryptedPacket;
 import org.by1337.btcp.server.dedicated.DedicatedServer;
 import org.by1337.btcp.server.dedicated.client.Client;
 import org.slf4j.Logger;
@@ -51,6 +52,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
         super.channelUnregistered(ctx);
         disconnect("connection unregister");
     }
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (cause instanceof TimeoutException) {
@@ -65,7 +67,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
     public void disconnect(String reason) {
         if (!disconnected) {
             try {
-                if (channel.isOpen()){
+                if (channel.isOpen()) {
                     send(new DisconnectPacket(reason));
                 }
                 this.channel.close().awaitUninterruptibly();
@@ -75,6 +77,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
             }
         }
     }
+
     @Override
     public void send(Packet packet) {
         if (channel.isOpen()) {
@@ -82,25 +85,35 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
         }
     }
     @Override
+    public void sendEncrypted(Packet packet) {
+        send(new EncryptedPacket(packet));
+    }
+
+    @Override
     public Channel getChannel() {
         return channel;
     }
+
     @Override
     public SocketAddress getAddress() {
         return address;
     }
+
     @Override
     public String getId() {
         return id;
     }
+
     @Override
     public DedicatedServer getServer() {
         return server;
     }
+
     @Override
     public long getConnected() {
         return connected;
     }
+
     @Override
     public boolean isDisconnected() {
         return disconnected;

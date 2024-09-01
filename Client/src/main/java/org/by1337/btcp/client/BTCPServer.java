@@ -9,6 +9,7 @@ import org.by1337.btcp.client.network.ConnectionStatusListener;
 import org.by1337.btcp.client.network.channel.ClientChannelManager;
 import org.by1337.btcp.client.network.channel.impl.MainClientChannel;
 import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.packet.impl.EncryptedPacket;
 import org.by1337.btcp.common.packet.impl.channel.ChannelStatusPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
 
@@ -35,13 +36,15 @@ public class BTCPServer extends JavaPlugin implements ConnectionStatusListener {
             if (id.equals("auto_gen")) {
                 id = null;
             }
+            String secretKey = config.get("secret-key").getAsString();
+            EncryptedPacket.setSecretKey(secretKey);
             connection = new Connection(
                     getSLF4JLogger(),
                     config.get("ip").getAsString(),
                     config.get("port").getAsInteger(),
                     id,
                     config.get("password").getAsString(),
-                    config.get("secret-key").getAsString(),
+                    secretKey,
                     this
             );
 

@@ -9,6 +9,7 @@ import java.net.SocketAddress;
 public interface Client {
     void disconnect(String reason);
     void send(Packet packet);
+    void sendEncrypted(Packet packet);
     Channel getChannel();
     SocketAddress getAddress();
     String getId();

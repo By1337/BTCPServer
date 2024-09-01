@@ -2,6 +2,7 @@ package org.by1337.btcp.server.network.channel;
 
 import io.netty.channel.Channel;
 import org.by1337.btcp.common.packet.Packet;
+import org.by1337.btcp.common.packet.impl.EncryptedPacket;
 import org.by1337.btcp.common.packet.impl.channel.ChanneledPacket;
 import org.by1337.btcp.server.dedicated.DedicatedServer;
 import org.by1337.btcp.server.dedicated.client.Client;
@@ -37,6 +38,10 @@ public class ChanneledClient implements Client {
     @Override
     public void send(Packet packet) {
         wrapped.send(new ChanneledPacket(channel.getId(), packet));
+    }
+    @Override
+    public void sendEncrypted(Packet packet) {
+        send(new EncryptedPacket(packet));
     }
 
     @Override
