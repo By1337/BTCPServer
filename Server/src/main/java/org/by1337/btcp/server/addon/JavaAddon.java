@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.logging.Level;
 
 public abstract class JavaAddon implements Addon {
     private Logger logger;
@@ -38,7 +37,7 @@ public abstract class JavaAddon implements Addon {
         this.classLoader = classLoader;
         this.file = file;
         this.server = server;
-        logger = new AddonLogger(LoggerFactory.getLogger(name), "[" + name + "]");
+        logger = LoggerFactory.getLogger(name);
     }
 
     @Override
