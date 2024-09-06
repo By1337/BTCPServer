@@ -104,4 +104,12 @@ public class DedicatedServer {
     public boolean isStopped() {
         return stopped;
     }
+
+    public Server getServer() {
+        return server;
+    }
+
+    public CommandManager getCommandManager() {
+        return commandManager;
+    }
 }
