@@ -67,6 +67,7 @@ public abstract class JavaAddon implements Addon {
     public AddonDescriptionFile getDescription() {
         return descriptionFile;
     }
+
     protected final void setEnabled(boolean enabled) {
         if (isEnabled != enabled) {
             isEnabled = enabled;
@@ -94,33 +95,35 @@ public abstract class JavaAddon implements Addon {
     }
 
     @Override
-    public void saveResource(@NotNull String resourcePath, boolean replace) {
-        if (resourcePath.isEmpty()) {
+    public void saveResource(@NotNull String resourcePath0, boolean replace) {
+        if (resourcePath0.isEmpty()) {
             throw new IllegalArgumentException("ResourcePath cannot be null or empty");
         }
 
-        resourcePath = resourcePath.replace('\\', '/');
-        InputStream in = getResource(resourcePath);
+        final String resourcePath = resourcePath0.replace('\\', '/');
+
+        File outFile = new File(dataFolder, resourcePath);
+        if (outFile.exists() && !replace) return;
+
+        final InputStream in = getResource(resourcePath);
         if (in == null) {
             throw new IllegalArgumentException("The embedded resource '" + resourcePath + "' cannot be found in " + file);
         }
 
-        File outFile = new File(dataFolder, resourcePath);
         int lastIndex = resourcePath.lastIndexOf('/');
         File outDir = new File(dataFolder, resourcePath.substring(0, Math.max(lastIndex, 0)));
         if (!outDir.exists()) {
             outDir.mkdirs();
         }
-        try {
-            if (!outFile.exists() || replace) {
+
+        try (
                 OutputStream out = new FileOutputStream(outFile);
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
-                }
-                out.close();
-                in.close();
+                in
+        ) {
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
             }
         } catch (IOException ex) {
             logger.error("Could not saveAndPrint " + outFile.getName() + " to " + outFile, ex);
