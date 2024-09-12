@@ -67,7 +67,7 @@ public class ConnectionAuth extends SimpleChannelInboundHandler<Packet> {
             this.disconnect(ctx, "Timed out");
         } else {
             this.disconnect(ctx, "Internal Exception: " + cause);
-            LOGGER.error(String.format("An error occurred in the %s connection", ctx.channel().remoteAddress()), cause);
+            LOGGER.error("An error occurred in the {} connection", ctx.channel().remoteAddress(), cause);
         }
     }
 

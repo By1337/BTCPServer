@@ -93,8 +93,14 @@ public class ServerChannelManager extends AbstractListener {
                 case ResponsePacket responsePacket -> channel.onResponse(responsePacket, client);
                 case RequestPacket requestPacket -> {
                     Packet request = requestPacket.getPacket();
-                    Packet response = channel.onRequest(request, channeledClient);
-                    channeledClient.send(new ResponsePacket(requestPacket.getUid(), response));
+
+                    channel.onRequestAsync(request, channeledClient).whenComplete((p, t) -> {
+                        if (t != null) {
+                            LOGGER.error("Failed to request channel {}", channel.getId(), t);
+                        }
+                        channeledClient.send(new ResponsePacket(requestPacket.getUid(), p));
+
+                    });
                 }
                 case CloseChannelPacket closeChannelPacket -> closeChannel(client, channel);
                 case null, default -> channel.onPacket(in, channeledClient);

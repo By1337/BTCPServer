@@ -6,6 +6,7 @@ import org.by1337.btcp.common.packet.impl.ResponsePacket;
 import org.by1337.btcp.common.packet.impl.channel.ChanneledPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
 import org.by1337.btcp.server.dedicated.client.Client;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -59,7 +60,11 @@ public abstract class AbstractServerChannel {
         return future;
     }
 
-    public abstract Packet onRequest(Packet packet, ChanneledClient client);
+    public CompletableFuture<@Nullable Packet> onRequestAsync(Packet packet, ChanneledClient client) {
+        return CompletableFuture.completedFuture(onRequest(packet, client));
+    }
+
+    public abstract @Nullable Packet onRequest(Packet packet, ChanneledClient client);
 
     public void onResponse(ResponsePacket responsePacket, Client client) {
         response(responsePacket.getUid(), client.getId(), responsePacket.getPacket());

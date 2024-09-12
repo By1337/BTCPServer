@@ -59,7 +59,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
             this.disconnect("Timed out");
         } else {
             this.disconnect("Internal Exception: " + cause);
-            LOGGER.error(String.format("An error occurred in the %s connection", this), cause);
+            LOGGER.error("An error occurred in the {} connection", this, cause);
         }
     }
 

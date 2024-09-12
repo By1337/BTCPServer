@@ -7,6 +7,7 @@ import org.by1337.btcp.common.util.id.SpacedName;
 import org.by1337.btcp.server.network.channel.AbstractServerChannel;
 import org.by1337.btcp.server.network.channel.ChanneledClient;
 import org.by1337.btcp.server.network.channel.ServerChannelManager;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ public final class MainServerChannel extends AbstractServerChannel {
     }
 
     @Override
-    public Packet onRequest(Packet packet, ChanneledClient client) {
+    public @Nullable Packet onRequest(Packet packet, ChanneledClient client) {
         if (packet instanceof PacketPingRequest pingRequest) {
             return new PacketPingResponse((int) (System.currentTimeMillis() - pingRequest.getTime()));
         }

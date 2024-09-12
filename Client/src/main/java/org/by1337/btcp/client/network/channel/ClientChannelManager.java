@@ -9,11 +9,14 @@ import org.by1337.btcp.common.packet.impl.channel.ChanneledPacket;
 import org.by1337.btcp.common.packet.impl.channel.CloseChannelPacket;
 import org.by1337.btcp.common.packet.impl.channel.OpenChannelPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ClientChannelManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger("BTCPServer");
     private final Connection connection;
 
     private final Map<SpacedName, AbstractClientChannel> channelMap = new HashMap<>();
@@ -55,7 +58,13 @@ public class ClientChannelManager {
             } else if (in instanceof ResponsePacket responsePacket) {
                 channel.response(responsePacket.getUid(), responsePacket.getPacket());
             } else if (in instanceof RequestPacket requestPacket) {
-                channel.send(new ResponsePacket(requestPacket.getUid(), channel.onRequest(requestPacket.getPacket())));
+                channel.onRequestAsync(requestPacket.getPacket()).whenComplete((p, t) -> {
+                    if (t != null) {
+                        LOGGER.error("Failed to request channel {}", channel.getId(), t);
+                    }
+                    channel.send(new ResponsePacket(requestPacket.getUid(), channel.onRequest(p)));
+                });
+
             } else {
                 channel.onPacket(in);
             }

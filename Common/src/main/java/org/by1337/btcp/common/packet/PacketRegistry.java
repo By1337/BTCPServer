@@ -1,6 +1,5 @@
 package org.by1337.btcp.common.packet;
 
-import org.by1337.btcp.common.annotations.PacketInfo;
 import org.by1337.btcp.common.packet.impl.*;
 import org.by1337.btcp.common.packet.impl.channel.*;
 import org.by1337.btcp.common.util.id.SpacedName;

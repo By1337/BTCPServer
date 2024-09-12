@@ -7,6 +7,7 @@ import org.by1337.btcp.common.packet.impl.RequestPacket;
 import org.by1337.btcp.common.packet.impl.channel.ChannelStatusPacket;
 import org.by1337.btcp.common.packet.impl.channel.ChanneledPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -69,6 +70,9 @@ public abstract class AbstractClientChannel {
         }
     }
 
+    public CompletableFuture<@Nullable Packet> onRequestAsync(Packet packet){
+        return CompletableFuture.completedFuture(onRequest(packet));
+    }
     public abstract @Nullable Packet onRequest(Packet packet);
 
     public void send(Packet packet) {
