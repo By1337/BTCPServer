@@ -78,13 +78,19 @@
     </build>
 
     <repositories>
-        <!--        <repository>-->
-        <!--            <id>by1337</id>-->
-        <!--            <url>https://repo.by1337.space/repository/maven-releases/</url>-->
-        <!--        </repository>-->
+        <repository>
+            <id>by1337-repo</id>
+            <url>https://repo.by1337.space/repository/maven-releases/</url>
+        </repository>
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>org.by1337.blib.nbt</groupId>
+            <artifactId>BLib-Nbt</artifactId>
+            <version>1.2</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- logging -->
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -6,6 +6,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import io.netty.util.ByteProcessor;
+import org.by1337.blib.nbt.NbtByteBuffer;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.PacketRegistry;
 import org.by1337.btcp.common.packet.PacketType;
@@ -31,6 +32,10 @@ public class ByteBuffer extends ByteBuf {
 
     public ByteBuffer(ByteBuf source) {
         this.source = source;
+    }
+
+    public NbtByteBuffer asNBTByteBuffer() {
+        return new WrappedNbtByteBuffer(this);
     }
 
     public int readVarInt() {
@@ -2929,6 +2934,7 @@ public class ByteBuffer extends ByteBuf {
     public interface FunctionException<T, R> {
         R apply(T t) throws IOException;
     }
+
     @FunctionalInterface
     public interface ExceptionBiConsumer<T, U> {
         void accept(T t, U u) throws IOException;

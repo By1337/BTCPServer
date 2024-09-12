@@ -100,6 +100,10 @@
             <name>Minecraft Libraries</name>
             <url>https://libraries.minecraft.net</url>
         </repository>
+        <repository>
+            <id>by1337-repo</id>
+            <url>https://repo.by1337.space/repository/maven-releases/</url>
+        </repository>
     </repositories>
 
     <dependencies>
