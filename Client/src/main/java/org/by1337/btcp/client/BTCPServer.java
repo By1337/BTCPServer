@@ -1,6 +1,7 @@
 package org.by1337.btcp.client;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.by1337.blib.chat.util.Message;
 import org.by1337.blib.configuration.YamlConfig;
@@ -21,6 +22,7 @@ public class BTCPServer extends JavaPlugin implements ConnectionStatusListener {
     private static BTCPServer instance;
     private Connection connection;
     private ClientChannelManager clientChannelManager;
+    private String onDisconnect;
 
     @Override
     public void onLoad() {
@@ -36,6 +38,7 @@ public class BTCPServer extends JavaPlugin implements ConnectionStatusListener {
             if (id.equals("auto_gen")) {
                 id = null;
             }
+            onDisconnect = config.get("on-disconnect").getAsString("stop-server");
             String secretKey = config.get("secret-key").getAsString();
             EncryptedPacket.setSecretKey(secretKey);
             connection = new Connection(
@@ -77,7 +80,20 @@ public class BTCPServer extends JavaPlugin implements ConnectionStatusListener {
     }
 
     public void onDisconnect() {
-        Bukkit.getServer().shutdown();
+        if ("disable-all-depend-plugins".equalsIgnoreCase(onDisconnect)) {
+            for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
+                if (
+                        plugin.getDescription().getDepend().contains(getDescription().getName()) ||
+                        plugin.getDescription().getSoftDepend().contains(getDescription().getName()) ||
+                        plugin.getDescription().getLoadBefore().contains(getDescription().getName())
+                ) {
+                    Bukkit.getPluginManager().disablePlugin(plugin);
+                }
+            }
+            Bukkit.getPluginManager().disablePlugin(this);
+        } else {
+            Bukkit.getServer().shutdown();
+        }
     }
 
     @Override
