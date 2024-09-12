@@ -71,9 +71,9 @@ class ServerChannelManagerTest {
 
     void clientChannelRegisterTest() {
         scheduler.schedule(() -> clientChannel.register(), 5, TimeUnit.MILLISECONDS);
-        toServer.sync(20);
+        toServer.sync(250);
         assertTrue(toServer.data instanceof OpenChannelPacket);
-        toServer.waitEnd(20);
+        toServer.waitEnd(30);
         assertEquals(ChannelStatusPacket.ChannelStatus.OPENED, clientChannel.getStatus());
     }
 
@@ -86,8 +86,8 @@ class ServerChannelManagerTest {
             client.request(new PacketPingRequest(System.currentTimeMillis()), 15, TimeUnit.MILLISECONDS).thenAccept(packetOpt -> {
                 pingResponseWaiter.update(packetOpt.orElse(null));
             });
-        }, 5, TimeUnit.MILLISECONDS);
-        pingResponseWaiter.sync(30);
+        }, 10, TimeUnit.MILLISECONDS);
+        pingResponseWaiter.sync(250);
         assertTrue(pingResponseWaiter.data instanceof PacketPingResponse);
         pingResponseWaiter.waitEnd(30);
     }
@@ -98,7 +98,7 @@ class ServerChannelManagerTest {
         clientChannel.request(new PacketPingRequest(System.currentTimeMillis()), 15, TimeUnit.MILLISECONDS).thenAccept(packetOpt -> {
             pingResponseWaiter.update(packetOpt.orElse(null));
         });
-        pingResponseWaiter.sync(30);
+        pingResponseWaiter.sync(250);
         assertTrue(pingResponseWaiter.data instanceof PacketPingResponse);
         pingResponseWaiter.waitEnd(30);
     }

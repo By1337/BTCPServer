@@ -62,7 +62,7 @@ public class ClientChannelManager {
                     if (t != null) {
                         LOGGER.error("Failed to request channel {}", channel.getId(), t);
                     }
-                    channel.send(new ResponsePacket(requestPacket.getUid(), channel.onRequest(p)));
+                    channel.send(new ResponsePacket(requestPacket.getUid(), p));
                 });
 
             } else {
