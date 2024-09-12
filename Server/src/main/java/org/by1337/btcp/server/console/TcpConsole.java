@@ -49,6 +49,7 @@ public class TcpConsole {
                 if (line == null) {
                     break;
                 }
+                if (line.isBlank()) continue;
 
                 this.processInput(line.trim());
             }

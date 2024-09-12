@@ -38,7 +38,7 @@ public abstract class AbstractClientChannel {
     }
 
     public void unregister() {
-
+        clientChannelManager.unregisterChannel(spacedName);
     }
 
     void setStatus(ChannelStatusPacket.ChannelStatus status) {
