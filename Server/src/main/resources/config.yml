@@ -1,5 +1,6 @@
 server:
   netty-threads: 6
+  netty-eventLoopThreads: 6
   port: 8080
   password: 'password'
   debug: false

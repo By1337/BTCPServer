@@ -44,6 +44,7 @@ public class DedicatedServer {
         password = parser.getOrDefault("password", context.get("server.password").getAsString());
         port = Integer.parseInt(parser.getOrDefault("port", context.get("server.port").getAsString()));
         System.setProperty("io.netty.eventLoopThreads", context.get("server.netty-threads").getAsString("6"));
+        System.setProperty("io.netty.eventLoopThreads", context.get("server.netty-eventLoopThreads").getAsString("6"));
         config = new Config(context);
         EncryptedPacket.setSecretKey(config.getSecretKey());
         clientList = new ClientList();
