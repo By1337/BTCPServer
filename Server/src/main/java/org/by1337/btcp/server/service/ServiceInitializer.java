@@ -13,7 +13,7 @@ import java.util.*;
 class ServiceInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceInitializer.class);
     private final ServiceLoader serviceLoader;
-    private List<WeightedItem<Pair<File, ServiceDescriptionFile>>> sorted = new ArrayList<>();
+    private final List<WeightedItem<Pair<File, ServiceDescriptionFile>>> sorted = new ArrayList<>();
 
     public ServiceInitializer(ServiceLoader serviceLoader) {
         this.serviceLoader = serviceLoader;

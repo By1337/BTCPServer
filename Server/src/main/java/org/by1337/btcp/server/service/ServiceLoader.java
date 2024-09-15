@@ -42,7 +42,7 @@ public class ServiceLoader {
                     v.getName() + "-" + v.getDescription().getVersion()
             );
         }
-        File dataFolder = new File(dir + "/" + description.getName());
+        File dataFolder = new File(file.getParentFile(), description.getName());
 
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
