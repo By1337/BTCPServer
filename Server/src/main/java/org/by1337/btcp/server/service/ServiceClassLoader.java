@@ -1,4 +1,4 @@
-package org.by1337.btcp.server.addon;
+package org.by1337.btcp.server.service;
 
 
 import org.by1337.btcp.server.dedicated.DedicatedServer;
@@ -13,20 +13,19 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
-import java.util.logging.Logger;
 
-public class AddonClassLoader extends URLClassLoader {
-    private final AddonDescriptionFile description;
+public class ServiceClassLoader extends URLClassLoader {
+    private final ServiceDescriptionFile description;
     private final URL url;
     private final File dataFolder;
     private final File file;
     private final JarFile jar;
-    private final JavaAddon addon;
-    private final AddonLoader loader;
+    private final AbstractService service;
+    private final ServiceLoader loader;
     private final DedicatedServer server;
     private final Set<String> seenIllegalAccess = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    public AddonClassLoader(@Nullable ClassLoader parent, AddonDescriptionFile description, File dataFolder, File file, AddonLoader loader, DedicatedServer server) throws IOException, InvalidAddonException {
+    public ServiceClassLoader(@Nullable ClassLoader parent, ServiceDescriptionFile description, File dataFolder, File file, ServiceLoader loader, DedicatedServer server) throws IOException, InvalidServiceException {
         super(new URL[]{file.toURI().toURL()}, parent);
 
         this.description = description;
@@ -42,26 +41,26 @@ public class AddonClassLoader extends URLClassLoader {
             try {
                 jarClass = Class.forName(description.getMain(), true, this);
             } catch (ClassNotFoundException ex) {
-                throw new InvalidAddonException("Cannot find main class `" + description.getMain() + "'", ex);
+                throw new InvalidServiceException("Cannot find main class `" + description.getMain() + "'", ex);
             }
 
-            Class<? extends JavaAddon> pluginClass;
+            Class<? extends AbstractService> pluginClass;
 
             try {
-                pluginClass = jarClass.asSubclass(JavaAddon.class);
+                pluginClass = jarClass.asSubclass(AbstractService.class);
             } catch (ClassCastException ex) {
-                throw new InvalidAddonException("main class `" + description.getMain() + "' does not extend JavaAddon", ex);
+                throw new InvalidServiceException("main class `" + description.getMain() + "' does not extend AbstractService", ex);
             }
 
-            addon = pluginClass.newInstance();
+            service = pluginClass.newInstance();
         } catch (IllegalAccessException ex) {
-            throw new InvalidAddonException("No public constructor", ex);
+            throw new InvalidServiceException("No public constructor", ex);
         } catch (InstantiationException ex) {
-            throw new InvalidAddonException("Abnormal addon type", ex);
+            throw new InvalidServiceException("Abnormal service type", ex);
         }
     }
 
-    synchronized void initialize(@NotNull JavaAddon module) {
+    synchronized void initialize(@NotNull AbstractService module) {
         if (module.getClass().getClassLoader() != this) {
             throw new IllegalArgumentException("Cannot initialize module outside of this class loader");
         }
@@ -91,14 +90,14 @@ public class AddonClassLoader extends URLClassLoader {
         if (global) {
             Class<?> result = loader.getClassByName(name, resolve);
 
-            if (result != null && result.getClassLoader() instanceof AddonClassLoader addonClassLoader) {
-                String addon = addonClassLoader.addon.getName();
-                if (!seenIllegalAccess.contains(addon) &&
-                    !description.getDepend().contains(addon) ||
-                    !description.getSoftDepend().contains(addon)
+            if (result != null && result.getClassLoader() instanceof ServiceClassLoader serviceClassLoader) {
+                String service = serviceClassLoader.service.getName();
+                if (!seenIllegalAccess.contains(service) &&
+                    !description.getDepend().contains(service) ||
+                    !description.getSoftDepend().contains(service)
                 ) {
-                    seenIllegalAccess.add(addon);
-                    this.addon.getLogger().warn("Loaded class {} from {} which is not a depend or softdepend of this addon.", name, addon);
+                    seenIllegalAccess.add(service);
+                    this.service.getLogger().warn("Loaded class {} from {} which is not a depend or softdepend of this service.", name, service);
                 }
                 return result;
             }
@@ -106,7 +105,7 @@ public class AddonClassLoader extends URLClassLoader {
         throw new ClassNotFoundException(name);
     }
 
-    public AddonDescriptionFile getDescription() {
+    public ServiceDescriptionFile getDescription() {
         return description;
     }
 
@@ -126,8 +125,8 @@ public class AddonClassLoader extends URLClassLoader {
         return jar;
     }
 
-    public JavaAddon getAddon() {
-        return addon;
+    public AbstractService getService() {
+        return service;
     }
 
 

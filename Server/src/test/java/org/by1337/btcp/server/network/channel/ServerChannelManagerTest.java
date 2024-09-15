@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ServerChannelManagerTest {
-    private static Logger LOGGER = LoggerFactory.getLogger(ServerChannelManagerTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerChannelManagerTest.class);
     private ServerChannelManager serverChannelManager;
     @Mock
     private DedicatedServer server;
@@ -40,8 +40,8 @@ class ServerChannelManagerTest {
     @Mock
     private Connection connection;
     private AutoCloseable closeable;
-    private Waiter toServer = new Waiter();
-    private Waiter toClient = new Waiter();
+    private final Waiter toServer = new Waiter();
+    private final Waiter toClient = new Waiter();
     private MainServerChannel serverChannel;
     private MainClientChannel clientChannel;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);

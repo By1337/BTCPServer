@@ -27,8 +27,7 @@ public class TcpConsole {
 
     public void start() {
         try {
-            Terminal terminal = TerminalBuilder.builder().dumb(true).build();
-
+            Terminal terminal = TerminalBuilder.builder().encoding("UTF-8").dumb(true).build();
             this.readCommands(terminal);
         } catch (IOException var2) {
             LOGGER.error("Error while reading commands", var2);
@@ -57,6 +56,7 @@ public class TcpConsole {
             throw new RuntimeException(var10);
         }
     }
+
     protected void processInput(String input) {
         try {
             final ParseResults<DedicatedServer> parse = commandManager.getRootCommand().parse(input, server);

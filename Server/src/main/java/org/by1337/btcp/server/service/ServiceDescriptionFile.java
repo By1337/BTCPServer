@@ -1,4 +1,4 @@
-package org.by1337.btcp.server.addon;
+package org.by1337.btcp.server.service;
 
 import org.by1337.btcp.server.yaml.YamlContext;
 import org.jetbrains.annotations.NotNull;
@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-public class AddonDescriptionFile {
+public class ServiceDescriptionFile {
     public static final Pattern pattern = Pattern.compile("^[a-zA-Z0-9-_]+$");
     private final String name;
     private final String mainClass;
@@ -19,7 +19,7 @@ public class AddonDescriptionFile {
     private final Set<String> depend;
     private final Set<String> softDepend;
 
-    public AddonDescriptionFile(String name, String mainClass, String version, String description, Set<String> authors, Set<String> depend, Set<String> softDepend) {
+    public ServiceDescriptionFile(String name, String mainClass, String version, String description, Set<String> authors, Set<String> depend, Set<String> softDepend) {
         this.name = name;
         validate(name);
         this.mainClass = mainClass;
@@ -30,7 +30,7 @@ public class AddonDescriptionFile {
         this.softDepend = softDepend;
     }
 
-    public AddonDescriptionFile(YamlContext context) {
+    public ServiceDescriptionFile(YamlContext context) {
         this.name = Objects.requireNonNull(context.get("name").getAsString(), "missing 'name'!");
         validate(name);
         this.mainClass = Objects.requireNonNull(context.get("main").getAsString(), "missing 'main'!");

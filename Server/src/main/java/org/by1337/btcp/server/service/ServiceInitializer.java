@@ -1,4 +1,4 @@
-package org.by1337.btcp.server.addon;
+package org.by1337.btcp.server.service;
 
 
 import com.google.common.base.Joiner;
@@ -9,25 +9,24 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Level;
 
-class AddonInitializer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AddonInitializer.class);
-    private final AddonLoader addonLoader;
-    private List<WeightedItem<Pair<File, AddonDescriptionFile>>> sorted = new ArrayList<>();
+class ServiceInitializer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServiceInitializer.class);
+    private final ServiceLoader serviceLoader;
+    private List<WeightedItem<Pair<File, ServiceDescriptionFile>>> sorted = new ArrayList<>();
 
-    public AddonInitializer(AddonLoader addonLoader) {
-        this.addonLoader = addonLoader;
+    public ServiceInitializer(ServiceLoader serviceLoader) {
+        this.serviceLoader = serviceLoader;
     }
 
     public void process() {
-        List<Pair<File, AddonDescriptionFile>> toLoad = findAddons();
+        List<Pair<File, ServiceDescriptionFile>> toLoad = findServices();
 
-        for (Pair<File, AddonDescriptionFile> pair : toLoad) {
+        for (Pair<File, ServiceDescriptionFile> pair : toLoad) {
             sorted.add(new WeightedItem<>(pair));
         }
 
-        Map<String, WeightedItem<Pair<File, AddonDescriptionFile>>> lookup = new HashMap<>();
+        Map<String, WeightedItem<Pair<File, ServiceDescriptionFile>>> lookup = new HashMap<>();
         for (var item : sorted) {
             lookup.put(item.val.getRight().getName(), item);
         }
@@ -60,7 +59,7 @@ class AddonInitializer {
                 }
             }
             if (x > 2_000) {
-                List<AddonDescriptionFile> error = new ArrayList<>();
+                List<ServiceDescriptionFile> error = new ArrayList<>();
                 for (var item : new ArrayList<>(sorted)) {
                     if (item.weight > 1_900) {
                         error.add(item.val.getRight());
@@ -70,66 +69,82 @@ class AddonInitializer {
                 LOGGER.error("A cyclic relationship has been discovered between [" + Joiner.on(", ").join(
                         error.stream().map(i -> String.format("{%s-%s %s, %s}", i.getName(), i.getVersion(), i.getDepend(), i.getSoftDepend())).toList()
                 ));
-                for (AddonDescriptionFile desc : error) {
+                for (ServiceDescriptionFile desc : error) {
                     lookup.remove(desc.getName());
                 }
                 x = 0;
             }
         } while (hasChange);
         sorted.sort(Comparator.comparingInt(o -> o.weight));
-        for (WeightedItem<Pair<File, AddonDescriptionFile>> item : new ArrayList<>(sorted)) {
+        for (WeightedItem<Pair<File, ServiceDescriptionFile>> item : new ArrayList<>(sorted)) {
             try {
-                addonLoader.loadAddon(item.val.getLeft(), item.val.getRight());
-            } catch (IOException | InvalidAddonException e) {
-                LOGGER.error("failed to load addon " + item.val.getRight().getName(), e);
+                serviceLoader.loadService(item.val.getLeft(), item.val.getRight());
+            } catch (IOException | InvalidServiceException e) {
+                LOGGER.error("failed to load service " + item.val.getRight().getName(), e);
                 sorted.removeIf(i -> i == item);
             }
         }
     }
 
     public void onLoad() {
-        for (WeightedItem<Pair<File, AddonDescriptionFile>> item : sorted) {
-            addonLoader.onLoadPing(item.val.getRight().getName());
+        for (WeightedItem<Pair<File, ServiceDescriptionFile>> item : sorted) {
+            serviceLoader.onLoadPing(item.val.getRight().getName());
         }
     }
 
     public void onEnable() {
-        for (WeightedItem<Pair<File, AddonDescriptionFile>> item : sorted) {
-            addonLoader.enable(item.val.getRight().getName());
+        for (WeightedItem<Pair<File, ServiceDescriptionFile>> item : sorted) {
+            serviceLoader.enable(item.val.getRight().getName());
         }
     }
 
     public void onDisable() {
         for (int i = sorted.size() - 1; i >= 0; i--) {
             var v = sorted.get(i);
-            addonLoader.disable(v.val.getRight().getName());
-        }
-    }
-    public void unload() {
-        for (int i = sorted.size() - 1; i >= 0; i--) {
-            var v = sorted.get(i);
-            addonLoader.unload(v.val.getRight().getName());
+            serviceLoader.disable(v.val.getRight().getName());
         }
     }
 
-    public List<Pair<File, AddonDescriptionFile>> findAddons() {
-        List<Pair<File, AddonDescriptionFile>> toLoad = new ArrayList<>();
-        if (!addonLoader.getDir().exists()) return toLoad;
-        File[] files = addonLoader.getDir().listFiles();
-        if (files == null) return toLoad;
+    public void unload() {
+        for (int i = sorted.size() - 1; i >= 0; i--) {
+            var v = sorted.get(i);
+            serviceLoader.unload(v.val.getRight().getName());
+        }
+    }
+
+    public List<Pair<File, ServiceDescriptionFile>> findServices() {
+        List<Pair<File, ServiceDescriptionFile>> toLoad = new ArrayList<>();
+        if (!serviceLoader.getDir().exists()) return toLoad;
+        List<File> files = getServiceFiles();
         toLoad = new ArrayList<>();
         for (File file : files) {
             if (!file.getName().endsWith(".jar") || file.isDirectory()) continue;
             try {
                 toLoad.add(new Pair<>(
                         file,
-                        new AddonDescriptionFile(AddonLoader.readFileContentFromJar(file.getPath()))
+                        new ServiceDescriptionFile(ServiceLoader.readFileContentFromJar(file.getPath()))
                 ));
             } catch (IOException e) {
                 LOGGER.error("failed to read file " + file.getPath(), e);
             }
         }
         return toLoad;
+    }
+
+    private List<File> getServiceFiles() {
+        List<File> result = new ArrayList<>();
+        File[] files = serviceLoader.getDir().listFiles();
+        if (files != null) {
+            result.addAll(Arrays.asList(files));
+        }
+        File old = new File("./addons");
+        if (old.exists() && old.isDirectory()) {
+            var arr = old.listFiles();
+            if (arr != null) {
+                result.addAll(Arrays.asList(arr));
+            }
+        }
+        return result;
     }
 
     private static class WeightedItem<T> {

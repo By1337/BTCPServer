@@ -4,7 +4,7 @@ import org.by1337.btcp.common.event.EventManager;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.impl.EncryptedPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
-import org.by1337.btcp.server.addon.AddonLoader;
+import org.by1337.btcp.server.service.ServiceLoader;
 import org.by1337.btcp.server.commands.CommandManager;
 import org.by1337.btcp.server.console.TcpConsole;
 import org.by1337.btcp.server.dedicated.client.Client;
@@ -34,7 +34,7 @@ public class DedicatedServer {
     private final ServerChannelManager serverChannelManager;
     private final CommandManager commandManager;
     private volatile boolean stopped;
-    private final AddonLoader addonLoader;
+    private final ServiceLoader serviceLoader;
 
     public DedicatedServer(OptionParser parser) throws YamlContext.YamlParserException, IOException {
         TimeCounter timeCounter = new TimeCounter();
@@ -53,13 +53,13 @@ public class DedicatedServer {
         new MainServerChannel(serverChannelManager, new SpacedName("native", "main")).register();
         commandManager = new CommandManager(this);
 
-        addonLoader = new AddonLoader(new File("./addons"), this);
-        addonLoader.onLoadPingAll();
+        serviceLoader = new ServiceLoader(new File("./services"), this);
+        serviceLoader.onLoadPingAll();
 
         server = new Server(port, password, this);
         server.start(debug);
 
-        addonLoader.enableAll();
+        serviceLoader.enableAll();
         LOGGER.info("Done in ({})", timeCounter.getTimeFormat());
 
         TcpConsole tcpConsole = new TcpConsole(this, commandManager);
@@ -73,7 +73,7 @@ public class DedicatedServer {
     public void shutdown() {
         LOGGER.info("shutdown");
         stopped = true;
-        addonLoader.disableAll();
+        serviceLoader.disableAll();
         server.stop();
         System.exit(0);
     }
