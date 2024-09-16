@@ -209,7 +209,7 @@ public class ByteBuffer extends ByteBuf {
         return clazz.getEnumConstants()[readVarInt()];
     }
 
-    public <K, V> void writeMap(Map<K, V> source, ExceptionBiConsumer<ByteBuffer, K> keySerializer, ExceptionBiConsumer<ByteBuffer, V> valueSerializer) throws IOException {
+    public <K, V> void writeMap(Map<K, V> source, ByteBuffer.ExceptionBiConsumer<ByteBuffer, K> keySerializer, ByteBuffer.ExceptionBiConsumer<ByteBuffer, V> valueSerializer) throws IOException {
         writeVarInt(source.size());
         for (Map.Entry<K, V> entry : source.entrySet()) {
             keySerializer.accept(this, entry.getKey());
@@ -217,7 +217,7 @@ public class ByteBuffer extends ByteBuf {
         }
     }
 
-    public <K, V> Map<K, V> readMap(FunctionException<ByteBuffer, K> keyDeserializer, FunctionException<ByteBuffer, V> valueDeserializer) throws IOException {
+    public <K, V> Map<K, V> readMap(ByteBuffer.FunctionException<ByteBuffer, K> keyDeserializer, ByteBuffer.FunctionException<ByteBuffer, V> valueDeserializer) throws IOException {
         int size = readVarInt();
         Map<K, V> map = new HashMap<>(size);
         for (int i = 0; i < size; i++) {
@@ -226,7 +226,7 @@ public class ByteBuffer extends ByteBuf {
         return map;
     }
 
-    public <T> void writeOptional(@Nullable T val, ExceptionBiConsumer<ByteBuffer, T> serializer) throws IOException {
+    public <T> void writeOptional(@Nullable T val, ByteBuffer.ExceptionBiConsumer<ByteBuffer, T> serializer) throws IOException {
         if (val != null) {
             writeBoolean(true);
             serializer.accept(this, val);
@@ -235,14 +235,13 @@ public class ByteBuffer extends ByteBuf {
         }
     }
 
-    public <T> Optional<T> readOptional(FunctionException<ByteBuffer, T> deserializer) throws IOException {
+    public <T> Optional<T> readOptional(ByteBuffer.FunctionException<ByteBuffer, T> deserializer) throws IOException {
         if (readBoolean()) {
             return Optional.of(deserializer.apply(this));
         } else {
             return Optional.empty();
         }
     }
-
 
     /**
      * Returns the number of bytes (octets) this buffer can contain.
