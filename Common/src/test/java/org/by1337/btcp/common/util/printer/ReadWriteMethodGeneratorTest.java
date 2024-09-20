@@ -1,6 +1,9 @@
 package org.by1337.btcp.common.util.printer;
 
 import io.netty.buffer.Unpooled;
+import org.by1337.blib.nbt.NBT;
+import org.by1337.blib.nbt.NbtType;
+import org.by1337.blib.nbt.impl.CompoundTag;
 import org.by1337.btcp.common.io.ByteBuffer;
 import org.by1337.btcp.common.packet.PacketFlow;
 import org.junit.jupiter.api.Test;
@@ -20,6 +23,19 @@ public class ReadWriteMethodGeneratorTest {
         private transient String secretKey;
     }
 
+    public static class ExampleTestNBT {
+        private NBT nbt;
+        private CompoundTag compoundTag;
+
+        private @ReadWriteMethodGenerator.NullSafe NBT nbtNull;
+        private @ReadWriteMethodGenerator.NullSafe CompoundTag compoundTagNull;
+    }
+
+    @Test
+    public void test() throws NoSuchFieldException, IOException {
+        System.out.println(ReadWriteMethodGenerator.generate(ExampleTestNBT.class));
+    }
+
     @Test
     public void generateTest() throws NoSuchFieldException {
         assertEquals(generateRead("id", ExamplePacket.class), "byteBuf.readOptional(ByteBuffer::readUtf).orElse(null)");
@@ -27,8 +43,13 @@ public class ReadWriteMethodGeneratorTest {
         assertEquals(generateWrite("password", ExamplePacket.class), "byteBuf.writeUtf(id)");
         assertEquals(generateRead("password", ExamplePacket.class), "byteBuf.readUtf()");
 
+        assertEquals(generateWrite("nbt", ExampleTestNBT.class), "byteBuf.writeByte(id.getType().ordinal());id.write(byteBuf.asNBTByteBuffer())");
+        assertEquals(generateRead("nbt", ExampleTestNBT.class), "NbtType.values()[byteBuf.readByte()].read(byteBuf.asNBTByteBuffer())");
+        assertEquals(generateWrite("compoundTagNull", ExampleTestNBT.class), "byteBuf.writeOptional(id, (byteBufx, idx) -> {idx.write(byteBufx.asNBTByteBuffer());})");
+        assertEquals(generateRead("compoundTagNull", ExampleTestNBT.class), "byteBuf.readOptional(byteBufx -> (CompoundTag) NbtType.COMPOUND.read(byteBufx.asNBTByteBuffer())).orElse(null)");
+
         String generated = ReadWriteMethodGenerator.generate(ExamplePacket.class);
-        System.out.println(generated);
+
         assertFalse(generated.contains("secretKey"));
     }
 
@@ -112,6 +133,7 @@ public class ReadWriteMethodGeneratorTest {
         private Map<String, Map<String, String>> mapStringMap;
         private Map<String, Map<String, Map<String, String>>> mapMapMapString;
         private Map<PacketFlow, Map<String, PacketFlow>> packetFlowMapMap;
+
 
         private void fill() {
             primitiveInt = 42;

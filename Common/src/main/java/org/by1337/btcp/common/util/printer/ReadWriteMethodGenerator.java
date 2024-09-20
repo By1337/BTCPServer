@@ -1,5 +1,8 @@
 package org.by1337.btcp.common.util.printer;
 
+import org.by1337.blib.nbt.NBT;
+import org.by1337.blib.nbt.NbtType;
+import org.by1337.blib.nbt.impl.*;
 import org.by1337.btcp.common.io.ByteBuffer;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.util.id.SpacedName;
@@ -138,8 +141,13 @@ public class ReadWriteMethodGenerator {
             try {
                 if (genericType instanceof AnnotatedParameterizedType annotatedParameterizedType) {
                     if (annotatedParameterizedType.getAnnotatedActualTypeArguments().length == 1) {
-                        if (List.class.isAssignableFrom(type)) {
-                            return OneGenericPrinter.print(buffer, field, type, lambda, annotatedParameterizedType, "readList", true);
+                        if (Collection.class.isAssignableFrom(type)) {
+                            StringBuilder sb = new StringBuilder();
+                            if (!type.isAssignableFrom(List.class)) {
+                                sb.append("/* todo */ ");
+                            }
+                            sb.append(OneGenericPrinter.print(buffer, field, type, lambda, annotatedParameterizedType, "readList", true));
+                            return sb.toString();
                         } else if (Optional.class.isAssignableFrom(type)) {
                             return OneGenericPrinter.print(buffer, field, type, lambda, annotatedParameterizedType, "readOptional", true);
                         }
@@ -181,7 +189,7 @@ public class ReadWriteMethodGenerator {
             try {
                 if (genericType instanceof AnnotatedParameterizedType annotatedParameterizedType) {
                     if (annotatedParameterizedType.getAnnotatedActualTypeArguments().length == 1) {
-                        if (List.class.isAssignableFrom(type)) {
+                        if (Collection.class.isAssignableFrom(type)) {
                             return OneGenericPrinter.print(buffer, field, type, lambda, annotatedParameterizedType, "writeList", false);
                         } else if (Optional.class.isAssignableFrom(type)) {
                             return OneGenericPrinter.print(buffer, field, type, lambda, annotatedParameterizedType, "writeOptional", false);
@@ -232,6 +240,12 @@ public class ReadWriteMethodGenerator {
         printers.put(SpacedName.class, new DefaultPrinter("readSpacedName", "writeSpacedName"));
 
         printers.put(Enum.class, new EnumPrinter());
+
+        NBTPrinter nbtPrinter = new NBTPrinter();
+        for (Class<? extends NBT> type : NBTPrinter.CLASS_NBT_TYPE_MAP.keySet()) {
+            printers.put(type, nbtPrinter);
+        }
+        printers.put(NBT.class, nbtPrinter);
     }
 
     private interface Printer {
@@ -295,6 +309,51 @@ public class ReadWriteMethodGenerator {
         @Override
         public String printWriteLambda(String buffer, String field, Class<?> type) {
             return "ByteBuffer::writeEnum";
+        }
+    }
+
+    private static class NBTPrinter implements Printer {
+        private static final Map<Class<? extends NBT>, NbtType> CLASS_NBT_TYPE_MAP = new HashMap<>() {{
+            put(ByteArrNBT.class, NbtType.BYTE_ARR);
+            put(ByteNBT.class, NbtType.BYTE);
+            put(CompoundTag.class, NbtType.COMPOUND);
+            put(DoubleNBT.class, NbtType.DOUBLE);
+            put(FloatNBT.class, NbtType.FLOAT);
+            put(IntArrNBT.class, NbtType.INT_ARR);
+            put(IntNBT.class, NbtType.INT);
+            put(ListNBT.class, NbtType.LIST);
+            put(LongArrNBT.class, NbtType.LONG_ARR);
+            put(LongNBT.class, NbtType.LONG);
+            put(ShortNBT.class, NbtType.SHORT);
+            put(StringNBT.class, NbtType.STRING);
+        }};
+
+        @Override
+        public String printRead(String buffer, Class<?> type) {
+            NbtType nbtType = CLASS_NBT_TYPE_MAP.get(type);
+            if (nbtType == null) {
+                return String.format("NbtType.values()[%s.readByte()].read(%s.asNBTByteBuffer())", buffer, buffer);
+            }
+            return String.format("(%s) NbtType.%s.read(%s.asNBTByteBuffer())", type.getSimpleName(), nbtType.name(), buffer);
+        }
+
+        @Override
+        public String printReadLambda(String buffer, Class<?> type) {
+            return buffer + " -> " + printRead(buffer, type);
+        }
+
+        @Override
+        public String printWrite(String buffer, String field, Class<?> type) {
+            NbtType nbtType = CLASS_NBT_TYPE_MAP.get(type);
+            if (nbtType == null) {
+                return String.format("%s.writeByte(%s.getType().ordinal());%s.write(%s.asNBTByteBuffer())", buffer, field, field, buffer);
+            }
+            return String.format("%s.write(%s.asNBTByteBuffer())", field, buffer);
+        }
+
+        @Override
+        public String printWriteLambda(String buffer, String field, Class<?> type) {
+            return String.format("(%s, %s) -> {%s;}", buffer, field, printWrite(buffer, field, type));
         }
     }
 
