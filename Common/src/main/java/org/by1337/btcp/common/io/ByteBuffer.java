@@ -11,6 +11,7 @@ import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.PacketRegistry;
 import org.by1337.btcp.common.packet.PacketType;
 import org.by1337.btcp.common.util.id.SpacedName;
+import org.by1337.btcp.common.util.printer.ReadWriteMethodGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -149,14 +150,14 @@ public class ByteBuffer extends ByteBuf {
         }
     }
 
-    public <T> void writeList(Collection<T> list, BiConsumer<ByteBuffer, T> consumer) {
+    public <T> void writeList(Collection<T> list, ExceptionBiConsumer<ByteBuffer, T> consumer) throws IOException {
         writeVarInt(list.size());
         for (T t : list) {
             consumer.accept(this, t);
         }
     }
 
-    public <T> List<T> readList(Function<ByteBuffer, T> function) {
+    public <T> List<T> readList(FunctionException<ByteBuffer, T> function) throws IOException {
         int size = readVarInt();
         List<T> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
@@ -165,11 +166,11 @@ public class ByteBuffer extends ByteBuf {
         return list;
     }
 
-    public void writeStringList(Collection<String> list) {
+    public void writeStringList(Collection<String> list) throws IOException {
         writeList(list, (ByteBuffer::writeUtf));
     }
 
-    public List<String> readStringList() {
+    public List<String> readStringList() throws IOException {
         return readList(ByteBuffer::readUtf);
     }
 

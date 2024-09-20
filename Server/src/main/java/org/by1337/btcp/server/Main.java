@@ -7,7 +7,6 @@ import org.by1337.btcp.server.yaml.YamlContext;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) throws YamlContext.YamlParserException, IOException {
