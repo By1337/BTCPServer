@@ -31,12 +31,18 @@ public class PacketDecoder extends ByteToMessageDecoder {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
-        if (byteBuf.readableBytes() == 0) return;
+    protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> list) throws IOException {
+        try {
+            if (byteBuf.readableBytes() == 0) return;
 
-        list.add(read(new ByteBuffer(byteBuf)));
-        if (byteBuf.readableBytes() > 0) {
-            throw new DecoderException("bad packet!");
+            list.add(read(new ByteBuffer(byteBuf)));
+            if (byteBuf.readableBytes() > 0) {
+                throw new DecoderException("bad packet!");
+            }
+        } catch (Throwable t) {
+            LOGGER.error(MARKER, "Failed to read packet!", t);
+            ctx.channel().close();
+            throw t;
         }
     }
 

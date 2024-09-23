@@ -43,8 +43,8 @@ public class PacketEncoder extends MessageToByteEncoder<Packet> {
             if (debug) {
                 LOGGER.info(MARKER, "OUT: [{}:({})] {}", packet.getClass().getSimpleName(), type.getId(), packet);
             }
-        } catch (Exception e) {
-            LOGGER.error(MARKER, "Failed to encode packet " + packet.getClass().getSimpleName(), e);
+        } catch (Throwable e) {
+            LOGGER.error(MARKER, "Failed to encode packet {}", packet.getClass().getSimpleName(), e);
             throw e;
         }
     }

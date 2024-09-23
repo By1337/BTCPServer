@@ -11,23 +11,23 @@
 <dependencies>
   <dependency>
     <groupId>org.by1337.btcp.common</groupId>
-    <artifactId>Common</artifactId>
-    <version>1.1</version>
+    <artifactId>BTCPCommon</artifactId>
+    <version>1.2</version>
     <scope>provided</scope>
   </dependency>
 
 
   <dependency>
     <groupId>org.by1337.btcp.server</groupId>
-    <artifactId>Server</artifactId>
-    <version>1.1</version>
+    <artifactId>BTCPServer</artifactId>
+    <version>1.2</version>
     <scope>provided</scope>
   </dependency>
 
   <dependency>
     <groupId>org.by1337.btcp.client</groupId>
-    <artifactId>Client</artifactId>
-    <version>1.1</version>
+    <artifactId>BTCPClient</artifactId>
+    <version>1.2</version>
     <scope>provided</scope>
   </dependency>
 </dependencies>

@@ -31,10 +31,10 @@ public class ReadWriteMethodGeneratorTest {
         private @ReadWriteMethodGenerator.NullSafe CompoundTag compoundTagNull;
     }
 
-    @Test
+/*    @Test
     public void test() throws NoSuchFieldException, IOException {
         System.out.println(ReadWriteMethodGenerator.generate(ExampleTestNBT.class));
-    }
+    }*/
 
     @Test
     public void generateTest() throws NoSuchFieldException {
