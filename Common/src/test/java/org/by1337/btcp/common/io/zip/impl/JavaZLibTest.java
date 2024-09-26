@@ -2,6 +2,8 @@ package org.by1337.btcp.common.io.zip.impl;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.zip.DataFormatException;
@@ -29,7 +31,14 @@ class JavaZLibTest {
         } finally {
             source.release();
             dest.release();
+            decompressed.release();
         }
+    }
+
+    @AfterEach
+    public void close() {
+        compressor.release();
+        decompressor.release();
     }
 
     private byte[] toByteArray(ByteBuf buf) {

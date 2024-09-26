@@ -2,6 +2,7 @@ package org.by1337.btcp.common.io.zip.natives;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,9 +48,15 @@ class LibdeflateZLibTest {
         } finally {
             source.release();
             dest.release();
+            decompressed.release();
         }
     }
 
+    @AfterEach
+    public void close() {
+        if (compressor != null) compressor.release();
+        if (decompressor != null) decompressor.release();
+    }
 
     private byte[] toByteArray(ByteBuf buf) {
         byte[] bytes = new byte[buf.readableBytes()];
