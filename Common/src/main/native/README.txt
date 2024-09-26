@@ -1,0 +1,1 @@
+Use "docker compose build && docker compose up && docker compose down" to start building native libraries

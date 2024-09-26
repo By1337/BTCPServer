@@ -1,0 +1,37 @@
+name: libdeflate_builder
+services:
+  ubuntu_builder_arm64:
+    build:
+      context: ./build
+      dockerfile: Dockerfile.ubuntu
+    container_name: libdeflate_builder_ubuntu_arm64
+    platform: linux/arm64
+    volumes:
+      - ./dev/result:/app/result
+
+  alpine_builder_arm64:
+    build:
+      context: ./build
+      dockerfile: Dockerfile.alpine
+    container_name: libdeflate_builder_alpine_arm64
+    platform: linux/arm64
+    volumes:
+      - ./dev/result:/app/result
+
+  ubuntu_builder_x86_64:
+    build:
+      context: ./build
+      dockerfile: Dockerfile.ubuntu
+    container_name: libdeflate_builder_ubuntu_x86_64
+    platform: linux/x86_64
+    volumes:
+      - ./dev/result:/app/result
+
+  alpine_builder_x86_64:
+    build:
+      context: ./build
+      dockerfile: Dockerfile.alpine
+    container_name: libdeflate_builder_alpine_x86_64
+    platform: linux/x86_64
+    volumes:
+      - ./dev/result:/app/result

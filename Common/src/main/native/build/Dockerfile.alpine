@@ -1,0 +1,6 @@
+FROM amazoncorretto:17.0.12-alpine3.18
+RUN apk add --no-cache bash alpine-sdk cmake
+
+WORKDIR /app
+COPY . ./
+CMD sh build.sh
