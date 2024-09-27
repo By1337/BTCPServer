@@ -1,7 +1,6 @@
 package org.by1337.btcp.client.network;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
@@ -14,7 +13,6 @@ import org.by1337.btcp.common.packet.impl.PacketAuthResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ChannelHandler.Sharable
 public class ConnectionAuth extends SimpleChannelInboundHandler<Packet> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionAuth.class);
     private final Connection connection;
@@ -36,6 +34,10 @@ public class ConnectionAuth extends SimpleChannelInboundHandler<Packet> {
             if (response.getResponse() == PacketAuthResponse.Response.SUCCESSFULLY) {
                 connection.id = response.getId();
                 Channel channel = ctx.channel();
+                connection.setupCompression(
+                        response.getCompressionLvl(),
+                        response.getThreshold()
+                );
                 channel.pipeline().remove("auth");
                 channel.pipeline().addLast("handler", connection);
                 connection.authorized();

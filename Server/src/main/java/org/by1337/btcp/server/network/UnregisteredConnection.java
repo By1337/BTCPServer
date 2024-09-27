@@ -40,7 +40,7 @@ public class UnregisteredConnection extends SimpleChannelInboundHandler<Packet> 
 
     protected void read(ChannelHandlerContext ctx, Packet packet) throws Exception {
         ClientLoginEvent loginEvent = new ClientLoginEvent(ctx, packet);
-        if (server.getEventManager().callEvent(loginEvent).isCanceled()){
+        if (server.getEventManager().callEvent(loginEvent).isCanceled()) {
             String reason = Objects.requireNonNullElse(loginEvent.getReason(), "for no reason");
             disconnect(ctx, reason);
             return;
@@ -71,7 +71,16 @@ public class UnregisteredConnection extends SimpleChannelInboundHandler<Packet> 
                 channel.pipeline().addLast("handler", connection);
 
                 server.getClientList().newClient(connection);
-                connection.send(new PacketAuthResponse(PacketAuthResponse.Response.SUCCESSFULLY, id));
+                connection.send(new PacketAuthResponse(
+                        PacketAuthResponse.Response.SUCCESSFULLY,
+                        id,
+                        server.getConfig().getThreshold(),
+                        server.getConfig().getCompressionLvl()
+                ));
+                connection.setupCompression(
+                        server.getConfig().getCompressionLvl(),
+                        server.getConfig().getThreshold()
+                );
             } else {
                 disconnect(ctx, "Wrong password!");
             }

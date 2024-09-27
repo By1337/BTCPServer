@@ -10,17 +10,15 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.TimeoutException;
-import org.by1337.btcp.client.BTCPServer;
-import org.by1337.btcp.common.codec.PacketDecoder;
-import org.by1337.btcp.common.codec.PacketEncoder;
-import org.by1337.btcp.common.codec.Varint21FrameDecoder;
-import org.by1337.btcp.common.codec.Varint21LengthFieldPrepender;
+import org.by1337.btcp.common.codec.*;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.PacketFlow;
 import org.by1337.btcp.common.packet.impl.DisconnectPacket;
 import org.by1337.btcp.common.packet.impl.PacketAuthResponse;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+
+import java.util.function.Consumer;
 
 public class Connection extends SimpleChannelInboundHandler<Packet> {
     private final Logger logger;
@@ -132,23 +130,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Packet packet) throws Exception {
-        if (!authorized) {
-            if (packet instanceof PacketAuthResponse authResponse) {
-                if (authResponse.getResponse() == PacketAuthResponse.Response.SUCCESSFULLY) {
-                    id = authResponse.getId();
-                    authorized = true;
-                    logger.info("Successful authorization");
-                    return;
-                }
-            } else if (packet instanceof DisconnectPacket disconnectPacket) {
-                logger.error("Failed to authenticate. Reason: {}", disconnectPacket.getReason());
-            } else {
-                logger.error("Failed to authenticate");
-            }
-            shutdown();
-        } else {
-            statusListener.onPacket(packet);
-        }
+        statusListener.onPacket(packet);
     }
 
     @Override
@@ -169,6 +151,33 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
         } else {
             this.disconnect(ctx, "Internal Exception: " + cause);
             logger.error("An error occurred", cause);
+        }
+    }
+
+    public void setupCompression(int lvl, int threshold) {
+        removeCompression();
+        channel.pipeline().addBefore("decoder", "decompress", new CompressionDecoder(threshold));
+        this.channel.pipeline().addBefore("encoder", "compress", new CompressionEncoder(threshold, lvl));
+    }
+
+    private void removeCompression() {
+        removeHandler("decompress", h -> {
+            if (h instanceof CompressionDecoder decoder) {
+                decoder.release();
+            }
+        });
+        removeHandler("compress", h -> {
+            if (h instanceof CompressionEncoder encoder) {
+                encoder.release();
+            }
+        });
+    }
+
+    private void removeHandler(String name, Consumer<ChannelHandler> action) {
+        ChannelHandler decompress = channel.pipeline().get(name);
+        if (decompress != null) {
+            channel.pipeline().remove(decompress);
+            action.accept(decompress);
         }
     }
 

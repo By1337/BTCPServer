@@ -18,6 +18,8 @@ import java.util.*;
 
 public class YamlContext {
     private LinkedHashMap<String, Object> raw;
+    @Nullable
+    private YamlContext defaults;
 
     public YamlContext(LinkedHashMap<String, Object> raw) {
         this.raw = raw;
@@ -98,17 +100,17 @@ public class YamlContext {
         for (String s : path0) {
             if (last == null) {
                 Object o = raw.get(s);
-                if (o == null) return YamlValue.EMPTY;
+                if (o == null) return defaults != null ? defaults.get(path) : YamlValue.EMPTY;
                 last = o;
             } else if (last instanceof Map<?, ?> sub) {
                 Object o = sub.get(s);
-                if (o == null) return YamlValue.EMPTY;
+                if (o == null) return defaults != null ? defaults.get(path) : YamlValue.EMPTY;
                 last = o;
             } else {
                 throw new ClassCastException(last.getClass().getName() + " to Map<String, Object>");
             }
         }
-        return new YamlValue(last);
+        return last != null || defaults == null ? new YamlValue(last) : defaults.get(path);
     }
 
     public String saveToString() {
@@ -127,6 +129,14 @@ public class YamlContext {
         try (FileWriter writer = new FileWriter(fileName)) {
             yaml.dump(raw, writer);
         }
+    }
+
+    public YamlContext getDefaults() {
+        return defaults;
+    }
+
+    public void setDefaults(YamlContext defaults) {
+        this.defaults = defaults;
     }
 
     public LinkedHashMap<String, Object> getRaw() {

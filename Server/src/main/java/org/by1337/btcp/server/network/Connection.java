@@ -1,9 +1,12 @@
 package org.by1337.btcp.server.network;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.TimeoutException;
+import org.by1337.btcp.common.codec.CompressionDecoder;
+import org.by1337.btcp.common.codec.CompressionEncoder;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.impl.DisconnectPacket;
 import org.by1337.btcp.common.packet.impl.EncryptedPacket;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public class Connection extends SimpleChannelInboundHandler<Packet> implements Client {
@@ -62,7 +66,31 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
             LOGGER.error("An error occurred in the {} connection", this, cause);
         }
     }
+    public void setupCompression(int lvl, int threshold) {
+        removeCompression();
+        channel.pipeline().addBefore("decoder", "decompress", new CompressionDecoder(threshold));
+        this.channel.pipeline().addBefore("encoder", "compress", new CompressionEncoder(threshold, lvl));
+    }
+    private void removeCompression() {
+        removeHandler("decompress", h -> {
+            if (h instanceof CompressionDecoder decoder){
+                decoder.release();
+            }
+        });
+        removeHandler("compress", h -> {
+            if (h instanceof CompressionEncoder encoder){
+                encoder.release();
+            }
+        });
+    }
 
+    private void removeHandler(String name, Consumer<ChannelHandler> action) {
+        ChannelHandler decompress = channel.pipeline().get(name);
+        if (decompress != null){
+            channel.pipeline().remove(decompress);
+            action.accept(decompress);
+        }
+    }
     @Override
     public void disconnect(String reason) {
         if (!disconnected) {

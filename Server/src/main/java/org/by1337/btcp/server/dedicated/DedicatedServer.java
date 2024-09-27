@@ -40,6 +40,10 @@ public class DedicatedServer {
         TimeCounter timeCounter = new TimeCounter();
 
         YamlContext context = new YamlContext(ResourceUtil.saveResource("config.yml", false, new File("./")));
+        String def = ResourceUtil.getResourceAsString("config.yml");
+        if (def != null){
+            context.setDefaults(new YamlContext(def));
+        }
         debug = Boolean.parseBoolean(parser.getOrDefault("debug", context.get("server.debug").getAsString()));
         password = parser.getOrDefault("password", context.get("server.password").getAsString());
         port = Integer.parseInt(parser.getOrDefault("port", context.get("server.port").getAsString()));

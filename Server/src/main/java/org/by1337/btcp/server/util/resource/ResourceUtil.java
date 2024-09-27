@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 
 public class ResourceUtil {
     @CanIgnoreReturnValue
@@ -51,6 +52,24 @@ public class ResourceUtil {
             return connection.getInputStream();
         } catch (IOException ex) {
             return null;
+        }
+    }
+    public static String getResourceAsString(@NotNull String filename) {
+        return getResourceAsString(filename, ResourceUtil.class);
+    }
+    public static String getResourceAsString(@NotNull String filename, Class<?> clazz) {
+        try {
+            URL url = clazz.getClassLoader().getResource(filename);
+            if (url == null) {
+                return null;
+            }
+            URLConnection connection = url.openConnection();
+            connection.setUseCaches(false);
+            try (InputStream in = connection.getInputStream()){
+                return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

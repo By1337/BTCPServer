@@ -11,10 +11,14 @@ import java.util.Objects;
 public class PacketAuthResponse extends Packet {
     private Response response;
     private String id;
+    private int threshold;
+    private int compressionLvl;
 
-    public PacketAuthResponse(Response response, String id) {
+    public PacketAuthResponse(Response response, String id, int threshold, int compressionLvl) {
         this.response = response;
         this.id = id;
+        this.threshold = threshold;
+        this.compressionLvl = compressionLvl;
     }
 
     public PacketAuthResponse() {
@@ -24,12 +28,16 @@ public class PacketAuthResponse extends Packet {
     public void read(ByteBuffer byteBuf) throws IOException {
         response = byteBuf.readEnum(Response.class);
         id = byteBuf.readUtf();
+        threshold = byteBuf.readVarInt();
+        compressionLvl = byteBuf.readVarInt();
     }
 
     @Override
     public void write(ByteBuffer byteBuf) throws IOException {
         byteBuf.writeEnum(response);
         byteBuf.writeUtf(id);
+        byteBuf.writeVarInt(threshold);
+        byteBuf.writeVarInt(compressionLvl);
     }
 
     public enum Response {
@@ -43,6 +51,14 @@ public class PacketAuthResponse extends Packet {
 
     public String getId() {
         return id;
+    }
+
+    public int getThreshold() {
+        return threshold;
+    }
+
+    public int getCompressionLvl() {
+        return compressionLvl;
     }
 
     @Override
