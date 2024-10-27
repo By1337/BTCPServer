@@ -16,7 +16,6 @@ public class CompressionDecoder extends ByteToMessageDecoder {
     private final ZLibDecompressor decompressor;
 
     public CompressionDecoder(int threshold) {
-        System.out.println("threshold = " + threshold);
         this.threshold = threshold;
         decompressor = ZLibFactory.createDecompressor();
     }
@@ -47,7 +46,6 @@ public class CompressionDecoder extends ByteToMessageDecoder {
     }
 
     public void release() {
-        System.out.println("release CompressionDecoder");
         decompressor.release();
     }
 }

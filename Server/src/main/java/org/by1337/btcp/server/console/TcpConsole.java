@@ -53,7 +53,9 @@ public class TcpConsole {
                 this.processInput(line.trim());
             }
         } catch (UserInterruptException var10) {
-            throw new RuntimeException(var10);
+            if (!server.isStopped()) {
+                server.shutdown();
+            }
         }
     }
 

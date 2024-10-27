@@ -126,7 +126,7 @@ public abstract class AbstractService implements Service {
                 out.write(buf, 0, len);
             }
         } catch (IOException ex) {
-            logger.error("Could not saveAndPrint " + outFile.getName() + " to " + outFile, ex);
+            logger.error("Could not saveAndPrint {} to {}", outFile.getName(), outFile, ex);
         }
     }
 

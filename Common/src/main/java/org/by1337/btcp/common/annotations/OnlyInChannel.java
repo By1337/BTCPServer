@@ -3,7 +3,7 @@ package org.by1337.btcp.common.annotations;
 import java.lang.annotation.*;
 
 /**
- * Аннотация означает что пакет может быть отправлен только в OnlyInChannel
+ * Аннотация означает что пакет может быть отправлен только в ChanneledPacket
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)

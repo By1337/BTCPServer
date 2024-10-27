@@ -14,8 +14,6 @@ public class CompressionEncoder extends MessageToByteEncoder<ByteBuf> {
 
 
     public CompressionEncoder(int threshold, int lvl) {
-        System.out.println("threshold = " + threshold);
-        System.out.println("lvl = " + lvl);
         this.threshold = threshold;
         compressor = ZLibFactory.createCompressor(lvl);
     }
@@ -41,7 +39,6 @@ public class CompressionEncoder extends MessageToByteEncoder<ByteBuf> {
     }
 
     public void release() {
-        System.out.println("release CompressionEncoder");
         compressor.release();
     }
 }
