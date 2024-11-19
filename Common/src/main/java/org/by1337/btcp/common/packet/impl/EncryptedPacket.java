@@ -59,6 +59,11 @@ public class EncryptedPacket extends Packet {
         }
     }
 
+    @Override
+    public void release() {
+        packet.release();
+    }
+
     public Packet getPacket() {
         return packet;
     }

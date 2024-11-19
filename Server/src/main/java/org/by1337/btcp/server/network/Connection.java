@@ -109,7 +109,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet> implements C
     @Override
     public void send(Packet packet) {
         if (channel.isOpen()) {
-            channel.writeAndFlush(packet);
+            channel.writeAndFlush(packet, channel.voidPromise());
         }
     }
     @Override
