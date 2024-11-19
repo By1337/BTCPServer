@@ -83,6 +83,7 @@ public class PacketRegistry<T extends Packet> {
                 .add(RequestPacket.class, RequestPacket::new, "native:request")
                 .add(ResponsePacket.class, ResponsePacket::new, "native:response")
                 .add(EncryptedPacket.class, EncryptedPacket::new, "native:encrypted")
+                .add(PacketForwardMessage.class, PacketForwardMessage::new, "native:forward_message")
         ;
     }
 

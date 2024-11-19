@@ -31,4 +31,11 @@ public class PacketPingResponse extends Packet {
     public void write(ByteBuffer byteBuf) throws IOException {
         byteBuf.writeVarInt(ping);
     }
+
+    @Override
+    public String toString() {
+        return "PacketPingResponse{" +
+                "ping=" + ping +
+                '}';
+    }
 }

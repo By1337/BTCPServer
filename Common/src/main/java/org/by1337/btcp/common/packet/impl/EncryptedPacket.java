@@ -66,4 +66,11 @@ public class EncryptedPacket extends Packet {
     public static void setSecretKey(String secretKey) {
         EncryptedPacket.secretKey = secretKey;
     }
+
+    @Override
+    public String toString() {
+        return "EncryptedPacket{" +
+                "packet=" + packet +
+                '}';
+    }
 }

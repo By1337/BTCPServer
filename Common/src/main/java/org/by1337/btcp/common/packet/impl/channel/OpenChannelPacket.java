@@ -31,4 +31,11 @@ public class OpenChannelPacket extends Packet {
     public SpacedName getChannel() {
         return channel;
     }
+
+    @Override
+    public String toString() {
+        return "OpenChannelPacket{" +
+                "channel=" + channel +
+                '}';
+    }
 }

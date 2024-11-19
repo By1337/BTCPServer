@@ -4,14 +4,15 @@ import org.by1337.btcp.common.event.EventManager;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.impl.EncryptedPacket;
 import org.by1337.btcp.common.util.id.SpacedName;
-import org.by1337.btcp.server.service.ServiceLoader;
 import org.by1337.btcp.server.commands.CommandManager;
 import org.by1337.btcp.server.console.TcpConsole;
 import org.by1337.btcp.server.dedicated.client.Client;
 import org.by1337.btcp.server.dedicated.client.ClientList;
 import org.by1337.btcp.server.network.Server;
 import org.by1337.btcp.server.network.channel.ServerChannelManager;
+import org.by1337.btcp.server.network.channel.impl.ForwardServerChannel;
 import org.by1337.btcp.server.network.channel.impl.MainServerChannel;
+import org.by1337.btcp.server.service.ServiceLoader;
 import org.by1337.btcp.server.util.OptionParser;
 import org.by1337.btcp.server.util.resource.ResourceUtil;
 import org.by1337.btcp.server.util.time.TimeCounter;
@@ -54,6 +55,7 @@ public class DedicatedServer {
         eventManager = new EventManager();
         serverChannelManager = new ServerChannelManager(this);
         new MainServerChannel(serverChannelManager, new SpacedName("native", "main")).register();
+        new ForwardServerChannel(serverChannelManager, new SpacedName("native", "forward")).register();
         commandManager = new CommandManager(this);
 
         serviceLoader = new ServiceLoader(new File("./services"), this);

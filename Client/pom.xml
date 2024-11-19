@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.by1337.btcp</groupId>
         <artifactId>BTCPServer-parent</artifactId>
-        <version>1.2</version>
+        <version>1.3</version>
     </parent>
     <groupId>org.by1337.btcp.client</groupId>
     <artifactId>BTCPClient</artifactId>
@@ -95,13 +95,13 @@
         <dependency>
             <groupId>org.by1337.blib</groupId>
             <artifactId>BLib-api</artifactId>
-            <version>1.2</version>
+            <version>1.3.2.1-beta</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.by1337.btcp.common</groupId>
             <artifactId>BTCPCommon</artifactId>
-            <version>1.2</version>
+            <version>1.3</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>

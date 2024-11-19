@@ -31,4 +31,11 @@ public class PacketPingRequest extends Packet {
     public long getTime() {
         return time;
     }
+
+    @Override
+    public String toString() {
+        return "PacketPingRequest{" +
+                "time=" + time +
+                '}';
+    }
 }

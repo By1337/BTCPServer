@@ -15,7 +15,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 
 public class NativeLoader {
-    private static final Logger LOGGER = LoggerFactory.getLogger(NativeLoader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("BTCP#NativeLoader");
     public static final boolean NATIVE_IS_AVAILABLE;
 
 
@@ -24,6 +24,9 @@ public class NativeLoader {
             NATIVE_IS_AVAILABLE = false;
         } else {
             NATIVE_IS_AVAILABLE = tryLoadNativeLibrary();
+            if (NATIVE_IS_AVAILABLE){
+                LOGGER.info("Using libdeflate compression");
+            }
         }
     }
 

@@ -23,5 +23,10 @@ public class CloseChannelPacket extends Packet {
     @Override
     public void write(ByteBuffer byteBuf) throws IOException {
     }
+
+    @Override
+    public String toString() {
+        return "CloseChannelPacket{}";
+    }
 }
 

@@ -39,4 +39,10 @@ public class ChannelStatusPacket extends Packet {
         UNKNOWN_CHANNEL
     }
 
+    @Override
+    public String toString() {
+        return "ChannelStatusPacket{" +
+                "status=" + status +
+                '}';
+    }
 }

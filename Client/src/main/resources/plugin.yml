@@ -1,6 +1,6 @@
 name: BTCPServer
 version: '${project.version}'
-main: org.by1337.btcp.client.BTCPServer
+main: org.by1337.btcp.client.BTCPClient
 api-version: '1.16'
 author: "By1337"
 depend:
