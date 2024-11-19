@@ -1,5 +1,6 @@
 package org.by1337.btcp.server.network.channel.impl;
 
+import io.netty.util.ReferenceCountUtil;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.impl.PacketForwardMessage;
 import org.by1337.btcp.common.util.id.SpacedName;
@@ -24,7 +25,7 @@ public class ForwardServerChannel extends AbstractServerChannel {
         if (packet instanceof PacketForwardMessage forwardMessage){
             getClients().forEach(c -> {
                 if (c.getChannel() != client.getChannel()){
-                    c.send(forwardMessage);
+                    c.send(ReferenceCountUtil.retain(forwardMessage));
                 }
             });
         }else {

@@ -46,8 +46,6 @@ public class PacketEncoder extends MessageToByteEncoder<Packet> {
         } catch (Throwable e) {
             LOGGER.error(MARKER, "Failed to encode packet {}", packet.getClass().getSimpleName(), e);
             throw e;
-        } finally {
-            packet.release();
         }
     }
 }

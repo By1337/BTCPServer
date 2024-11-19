@@ -3,6 +3,7 @@ package org.by1337.btcp.common.io;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import io.netty.util.ByteProcessor;
@@ -140,12 +141,12 @@ public class ByteBuffer extends ByteBuf {
 
     @CanIgnoreReturnValue
     public ByteBuffer writeUtf(@NotNull String string, int maxLen) {
-        byte[] var3 = string.getBytes(StandardCharsets.UTF_8);
-        if (var3.length > maxLen) {
-            throw new EncoderException("String too big (was " + var3.length + " bytes encoded, max " + maxLen + ")");
+        int size = ByteBufUtil.utf8Bytes(string);
+        if (size > maxLen) {
+            throw new EncoderException("String too big (was " + size + " bytes encoded, max " + maxLen + ")");
         } else {
-            this.writeVarInt(var3.length);
-            this.writeBytes(var3);
+            this.writeVarInt(size);
+            this.writeCharSequence(string, StandardCharsets.UTF_8);
             return this;
         }
     }
