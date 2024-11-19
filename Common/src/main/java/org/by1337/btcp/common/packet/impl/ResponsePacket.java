@@ -33,6 +33,13 @@ public class ResponsePacket extends Packet {
         byteBuf.writeOptional(packet, ByteBuffer::writePacket);
     }
 
+    @Override
+    public void release() {
+        if (packet != null) {
+            packet.release();
+        }
+    }
+
     public int getUid() {
         return uid;
     }

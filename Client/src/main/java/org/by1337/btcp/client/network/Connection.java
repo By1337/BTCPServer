@@ -130,7 +130,11 @@ public class Connection extends SimpleChannelInboundHandler<Packet> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Packet packet) throws Exception {
-        statusListener.onPacket(packet);
+        try {
+            statusListener.onPacket(packet);
+        } finally {
+            packet.release();
+        }
     }
 
     @Override

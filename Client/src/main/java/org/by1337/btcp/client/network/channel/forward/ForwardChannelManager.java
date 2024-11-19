@@ -1,5 +1,6 @@
 package org.by1337.btcp.client.network.channel.forward;
 
+import io.netty.buffer.ByteBuf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -28,7 +29,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
 
 public class ForwardChannelManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("TCPClient");
@@ -85,22 +85,30 @@ public class ForwardChannelManager {
     public class SubChannel {
         private final Lock lock = new ReentrantLock();
         private final SpacedName id;
-        private final Set<Consumer<byte[]>> listeners = new CopyOnWriteIdentityHashSet<>();
-        private final Map<Plugin, Set<Consumer<byte[]>>> pluginToListeners = new IdentityHashMap<>();
+        private final Set<Listener> listeners = new CopyOnWriteIdentityHashSet<>(2);
+        private final Map<Plugin, Set<Listener>> pluginToListeners = new IdentityHashMap<>(2);
+
+        private boolean preferReadBytes;
 
         public SubChannel(SpacedName id) {
             this.id = id;
         }
 
-        private void notifyListeners(byte[] data) {
-            for (Consumer<byte[]> consumer : listeners) {
+        private void notifyListeners(PacketForwardMessage message) {
+            for (Listener listener : listeners) {
                 try {
-                    consumer.accept(data);
+                    if (listener instanceof ByteBufListener byteBufListener) {
+                        byteBufListener.accept(message.buf());
+                    } else if (listener instanceof BytesListener bytesListener) {
+                        bytesListener.accept(message.bytes());
+                    } else {
+                        throw new IllegalArgumentException("Unknown listener type: " + listener.getClass().getName());
+                    }
                 } catch (Throwable t) {
-                    Plugin plugin = getOwner(consumer.getClass());
+                    Plugin plugin = getOwner(listener.getClass());
                     LOGGER.error("Error while notifying listener: {} class: {} owner: {} sub-channel: {}",
-                            consumer,
-                            consumer.getClass().getCanonicalName(),
+                            listener,
+                            listener.getClass().getCanonicalName(),
                             plugin == null ? "unknown" : plugin.getName(),
                             id,
                             t
@@ -109,17 +117,34 @@ public class ForwardChannelManager {
             }
         }
 
-        public void registerListener(@NotNull Consumer<byte[]> listener) {
+        public void registerListener(@NotNull BytesListener listener) {
+            registerListener((Listener) listener);
+        }
+
+        public void registerListener(@NotNull BytesListener listener, @Nullable Plugin owner) {
+            registerListener((Listener) listener, owner);
+        }
+
+        public void registerListener(@NotNull ByteBufListener listener) {
+            registerListener((Listener) listener);
+        }
+
+        public void registerListener(@NotNull ByteBufListener listener, @Nullable Plugin owner) {
+            registerListener((Listener) listener, owner);
+        }
+
+        private void registerListener(@NotNull Listener listener) {
             registerListener(listener, getOwner(listener.getClass()));
         }
 
-        public void registerListener(@NotNull Consumer<byte[]> listener, @Nullable Plugin owner) {
+        private void registerListener(@NotNull Listener listener, @Nullable Plugin owner) {
             try {
                 lock.lock();
                 if (listeners.contains(listener)) {
                     throw new IllegalStateException("Listener already registered");
                 }
                 listeners.add(listener);
+                this.updatePreferBytes();
                 if (owner != null) {
                     pluginToListeners.computeIfAbsent(owner, k -> new IdentityHashSet<>()).add(listener);
                 }
@@ -128,14 +153,31 @@ public class ForwardChannelManager {
             }
         }
 
-        public void unregisterListener(@NotNull Consumer<byte[]> listener) {
+        public void unregisterListener(@NotNull BytesListener listener) {
+            unregisterListener((Listener) listener);
+        }
+
+        public void unregisterListener(@NotNull BytesListener listener, @Nullable Plugin owner) {
+            unregisterListener((Listener) listener, owner);
+        }
+
+        public void unregisterListener(@NotNull ByteBufListener listener) {
+            unregisterListener((Listener) listener);
+        }
+
+        public void unregisterListener(@NotNull ByteBufListener listener, @Nullable Plugin owner) {
+            unregisterListener((Listener) listener, owner);
+        }
+
+        private void unregisterListener(@NotNull Listener listener) {
             unregisterListener(listener, getOwner(listener.getClass()));
         }
 
-        public void unregisterListener(@NotNull Consumer<byte[]> listener, @Nullable Plugin owner) {
+        private void unregisterListener(@NotNull Listener listener, @Nullable Plugin owner) {
             try {
                 lock.lock();
                 listeners.remove(listener);
+                this.updatePreferBytes();
                 if (owner != null) {
                     pluginToListeners.getOrDefault(owner, Collections.emptySet()).remove(listener);
                 }
@@ -150,18 +192,49 @@ public class ForwardChannelManager {
                 var set = pluginToListeners.remove(owner);
                 if (set != null) {
                     listeners.removeAll(set);
+                    this.updatePreferBytes();
                 }
             } finally {
                 lock.unlock();
             }
         }
 
+        private void updatePreferBytes() {
+          for (Listener listener : listeners) {
+            if (!(listener instanceof BytesListener)) {
+              return;
+            }
+          }
+
+          preferReadBytes = true;
+        }
+
         public void send(byte[] data) {
-            forwardChannel.send(new PacketForwardMessage(id, data));
+            forwardChannel.send(new PacketForwardMessage(id, data, preferReadBytes));
+        }
+
+        public void send(ByteBuf data) {
+            forwardChannel.send(new PacketForwardMessage(id, data, preferReadBytes));
         }
 
         private @Nullable Plugin getOwner(Class<?> clazz) {
             return clazz.getClassLoader() instanceof PluginClassLoader pcl ? pcl.getPlugin() : null;
+        }
+
+        private interface Listener {
+
+        }
+
+        @FunctionalInterface
+        public interface BytesListener extends SubChannel.Listener {
+
+            void accept(byte[] data);
+        }
+
+        @FunctionalInterface
+        public interface ByteBufListener extends SubChannel.Listener {
+
+            void accept(ByteBuf data);
         }
     }
 
@@ -181,7 +254,7 @@ public class ForwardChannelManager {
                     lock.readLock().unlock();
                 }
                 if (subChannel != null) {
-                    subChannel.notifyListeners(forwardMessage.data());
+                    subChannel.notifyListeners(forwardMessage);
                 }
             }
         }

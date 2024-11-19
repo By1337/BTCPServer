@@ -33,6 +33,11 @@ public class ChanneledPacket extends Packet {
         byteBuf.writePacket(packet);
     }
 
+    @Override
+    public void release() {
+        packet.release();
+    }
+
     public SpacedName getChannel() {
         return channel;
     }

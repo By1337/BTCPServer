@@ -31,6 +31,11 @@ public class RequestPacket extends Packet {
         byteBuf.writePacket(packet);
     }
 
+    @Override
+    public void release() {
+        packet.release();
+    }
+
     public int getUid() {
         return uid;
     }
