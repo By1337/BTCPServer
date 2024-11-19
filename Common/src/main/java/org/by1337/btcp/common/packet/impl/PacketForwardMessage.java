@@ -81,7 +81,7 @@ public class PacketForwardMessage extends Packet {
     public String toString() {
         return "PacketForwardMessage{" +
                 "to=" + to +
-                (bytes == null ? buf : ", data=" + bytes.length + " bytes...") +
+                ", data=" + (bytes == null ? buf : bytes.length + " bytes...") +
                 '}';
     }
 }
