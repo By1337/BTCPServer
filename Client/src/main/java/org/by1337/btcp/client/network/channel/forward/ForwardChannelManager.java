@@ -225,11 +225,13 @@ public class ForwardChannelManager {
 
         }
 
+        @FunctionalInterface
         public interface BytesListener extends SubChannel.Listener {
 
             void accept(byte[] data);
         }
 
+        @FunctionalInterface
         public interface ByteBufListener extends SubChannel.Listener {
 
             void accept(ByteBuf data);
