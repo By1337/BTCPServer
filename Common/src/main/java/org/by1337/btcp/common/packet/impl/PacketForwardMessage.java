@@ -3,6 +3,7 @@ package org.by1337.btcp.common.packet.impl;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import io.netty.util.ReferenceCounted;
 import org.by1337.btcp.common.annotations.PacketInfo;
 import org.by1337.btcp.common.io.ByteBuffer;
 import org.by1337.btcp.common.packet.Packet;
@@ -12,7 +13,7 @@ import org.by1337.btcp.common.util.id.SpacedName;
 import java.io.IOException;
 
 @PacketInfo(packetFlow = PacketFlow.ANY)
-public class PacketForwardMessage extends Packet {
+public class PacketForwardMessage extends Packet implements ReferenceCounted {
     private SpacedName to;
     private byte[] bytes;
     private ByteBuf buf;
@@ -36,8 +37,9 @@ public class PacketForwardMessage extends Packet {
     @Override
     public void read(ByteBuffer byteBuf) throws IOException {
         to = byteBuf.readSpacedName();
+        preferReadBytes = byteBuf.readBoolean();
         int length = byteBuf.readVarInt();
-        if (byteBuf.readBoolean()) {
+        if (preferReadBytes) {
             bytes = new byte[length];
             byteBuf.readBytes(bytes);
         } else {
@@ -59,10 +61,54 @@ public class PacketForwardMessage extends Packet {
     }
 
     @Override
-    public void release() {
+    public int refCnt() {
+        return buf == null ? -1 : buf.refCnt();
+    }
+
+    @Override
+    public ReferenceCounted retain() {
         if (buf != null) {
-            buf.release();
+            buf.retain();
         }
+
+        return this;
+    }
+
+    @Override
+    public ReferenceCounted retain(int increment) {
+        if (buf != null) {
+            buf.retain(increment);
+        }
+
+        return this;
+    }
+
+    @Override
+    public ReferenceCounted touch() {
+        if (buf != null) {
+            buf.touch();
+        }
+
+        return this;
+    }
+
+    @Override
+    public ReferenceCounted touch(Object hint) {
+        if (buf != null) {
+            buf.touch(hint);
+        }
+
+        return this;
+    }
+
+    @Override
+    public boolean release() {
+        return buf != null && buf.release();
+    }
+
+    @Override
+    public boolean release(int decrement) {
+        return buf != null && buf.release(decrement);
     }
 
     public SpacedName to() {
