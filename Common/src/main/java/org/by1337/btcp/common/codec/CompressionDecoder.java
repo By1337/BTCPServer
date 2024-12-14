@@ -1,7 +1,6 @@
 package org.by1337.btcp.common.codec;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.DecoderException;
@@ -31,7 +30,7 @@ public class CompressionDecoder extends ByteToMessageDecoder {
                 if (originalSize < this.threshold) {
                     throw new DecoderException("Badly compressed packet - size of " + originalSize + " is below server threshold of " + this.threshold);
                 }
-                ByteBuf result = Unpooled.directBuffer();
+                ByteBuf result = ctx.alloc().directBuffer();
                 decompressor.decompress(in, result, originalSize);
                 out.add(result);
                 in.skipBytes(in.readableBytes());

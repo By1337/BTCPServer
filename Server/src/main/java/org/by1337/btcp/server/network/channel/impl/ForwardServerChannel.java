@@ -1,6 +1,5 @@
 package org.by1337.btcp.server.network.channel.impl;
 
-import io.netty.util.ReferenceCountUtil;
 import org.by1337.btcp.common.packet.Packet;
 import org.by1337.btcp.common.packet.impl.PacketForwardMessage;
 import org.by1337.btcp.common.util.id.SpacedName;
@@ -22,13 +21,13 @@ public class ForwardServerChannel extends AbstractServerChannel {
 
     @Override
     public void onPacket(Packet packet, ChanneledClient client) {
-        if (packet instanceof PacketForwardMessage forwardMessage){
+        if (packet instanceof PacketForwardMessage forwardMessage) {
             getClients().forEach(c -> {
-                if (c.getChannel() != client.getChannel()){
-                    c.send(ReferenceCountUtil.retain(forwardMessage));
+                if (c.getChannel() != client.getChannel()) {
+                    c.send(forwardMessage);
                 }
             });
-        }else {
+        } else {
             LOGGER.warn("Client {} sent an unexpected packet to {}", client.getId(), packet);
         }
     }

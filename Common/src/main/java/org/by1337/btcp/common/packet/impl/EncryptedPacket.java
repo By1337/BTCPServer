@@ -1,8 +1,6 @@
 package org.by1337.btcp.common.packet.impl;
 
 import io.netty.buffer.Unpooled;
-import io.netty.util.ReferenceCountUtil;
-import io.netty.util.ReferenceCounted;
 import org.by1337.btcp.common.annotations.PacketInfo;
 import org.by1337.btcp.common.io.ByteBuffer;
 import org.by1337.btcp.common.packet.Packet;
@@ -13,7 +11,7 @@ import java.io.IOException;
 import java.util.Objects;
 
 @PacketInfo(packetFlow = PacketFlow.ANY)
-public class EncryptedPacket extends Packet implements ReferenceCounted {
+public class EncryptedPacket extends Packet {
     private static String secretKey;
     private Packet packet;
 
@@ -59,45 +57,6 @@ public class EncryptedPacket extends Packet implements ReferenceCounted {
         } finally {
             buffer.release();
         }
-    }
-
-    @Override
-    public int refCnt() {
-        return ReferenceCountUtil.refCnt(packet);
-    }
-
-    @Override
-    public ReferenceCounted retain() {
-        ReferenceCountUtil.retain(packet);
-        return this;
-    }
-
-    @Override
-    public ReferenceCounted retain(int increment) {
-        ReferenceCountUtil.retain(packet, increment);
-        return this;
-    }
-
-    @Override
-    public ReferenceCounted touch() {
-        ReferenceCountUtil.touch(packet);
-        return this;
-    }
-
-    @Override
-    public ReferenceCounted touch(Object hint) {
-        ReferenceCountUtil.touch(packet, hint);
-        return this;
-    }
-
-    @Override
-    public boolean release() {
-        return ReferenceCountUtil.release(packet);
-    }
-
-    @Override
-    public boolean release(int decrement) {
-        return ReferenceCountUtil.release(packet, decrement);
     }
 
     public Packet getPacket() {

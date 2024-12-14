@@ -1,6 +1,7 @@
 package org.by1337.btcp.client.network.channel.forward;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -98,7 +99,12 @@ public class ForwardChannelManager {
             for (Listener listener : listeners) {
                 try {
                     if (listener instanceof ByteBufListener byteBufListener) {
-                        byteBufListener.accept(message.buf());
+                        ByteBuf buf = Unpooled.wrappedBuffer(message.bytes());
+                        try {
+                            byteBufListener.accept(buf);
+                        } finally {
+                            buf.release();
+                        }
                     } else if (listener instanceof BytesListener bytesListener) {
                         bytesListener.accept(message.bytes());
                     } else {
@@ -117,6 +123,14 @@ public class ForwardChannelManager {
             }
         }
 
+        public void registerBytesListener(@NotNull BytesListener listener) {
+            registerListener((Listener) listener);
+        }
+
+        public void registerBytesListener(@NotNull BytesListener listener, @Nullable Plugin owner) {
+            registerListener((Listener) listener, owner);
+        }
+
         public void registerListener(@NotNull BytesListener listener) {
             registerListener((Listener) listener);
         }
@@ -130,6 +144,14 @@ public class ForwardChannelManager {
         }
 
         public void registerListener(@NotNull ByteBufListener listener, @Nullable Plugin owner) {
+            registerListener((Listener) listener, owner);
+        }
+
+        public void registerByteBufListener(@NotNull ByteBufListener listener) {
+            registerListener((Listener) listener);
+        }
+
+        public void registerByteBufListener(@NotNull ByteBufListener listener, @Nullable Plugin owner) {
             registerListener((Listener) listener, owner);
         }
 
@@ -211,11 +233,17 @@ public class ForwardChannelManager {
         }
 
         public void send(byte[] data) {
-            forwardChannel.send(new PacketForwardMessage(id, data, preferReadBytes));
+            forwardChannel.send(new PacketForwardMessage(id, data));
         }
 
         public void send(ByteBuf data) {
-            forwardChannel.send(new PacketForwardMessage(id, data, preferReadBytes));
+            try {
+                byte[] bytes = new byte[data.readableBytes()];
+                data.readBytes(bytes);
+                forwardChannel.send(new PacketForwardMessage(id, bytes));
+            } finally {
+                data.release();
+            }
         }
 
         private @Nullable Plugin getOwner(Class<?> clazz) {
