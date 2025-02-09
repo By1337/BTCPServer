@@ -1,13 +1,12 @@
 package org.by1337.btcp.server.yaml;
 
+import blib.com.mojang.serialization.Codec;
+import blib.com.mojang.serialization.DataResult;
 import org.by1337.btcp.server.util.Pair;
 import org.by1337.btcp.server.yaml.adapter.AdapterRegistry;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,10 +15,40 @@ public class YamlValue {
     public static final YamlValue EMPTY = new YamlValue(null);
     private final @Nullable Object value;
 
+    @Deprecated
     public YamlValue(@Nullable Object value) {
         this.value = value;
     }
 
+    public static YamlValue wrap(@Nullable Object value) {
+        if (value == null) return EMPTY;
+        if (value instanceof YamlValue) return (YamlValue) value;
+        return new YamlValue(value);
+    }
+
+    public <T> DataResult<blib.com.mojang.datafixers.util.Pair<T, YamlValue>> decode(Codec<T> codec){
+        return codec.decode(YamlOps.INSTANCE, this);
+    }
+
+    public boolean isMap() {
+        return value instanceof Map<?, ?> || value instanceof YamlContext;
+    }
+
+    public boolean isList() {
+        return value instanceof List<?>;
+    }
+
+    public boolean isEmpty() {
+        return value == null;
+    }
+
+    public boolean isPrimitive() {
+        return !isMap() && !isList();
+    }
+
+    public Set<Map.Entry<YamlValue, YamlValue>> entrySet() {
+        return getAsMap(Function.identity(), Function.identity()).entrySet();
+    }
 
     public <T> T getAs(Class<T> type) {
         return AdapterRegistry.getAs(value, type);

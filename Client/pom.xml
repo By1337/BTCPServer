@@ -95,7 +95,7 @@
         <dependency>
             <groupId>org.by1337.blib</groupId>
             <artifactId>BLib-api</artifactId>
-            <version>1.3.2.1-beta</version>
+            <version>1.5.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

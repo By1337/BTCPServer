@@ -89,8 +89,6 @@ public class ForwardChannelManager {
         private final Set<Listener> listeners = new CopyOnWriteIdentityHashSet<>(2);
         private final Map<Plugin, Set<Listener>> pluginToListeners = new IdentityHashMap<>(2);
 
-        private boolean preferReadBytes;
-
         public SubChannel(SpacedName id) {
             this.id = id;
         }
@@ -166,7 +164,6 @@ public class ForwardChannelManager {
                     throw new IllegalStateException("Listener already registered");
                 }
                 listeners.add(listener);
-                this.updatePreferReadBytes();
                 if (owner != null) {
                     pluginToListeners.computeIfAbsent(owner, k -> new IdentityHashSet<>()).add(listener);
                 }
@@ -199,7 +196,6 @@ public class ForwardChannelManager {
             try {
                 lock.lock();
                 listeners.remove(listener);
-                this.updatePreferReadBytes();
                 if (owner != null) {
                     pluginToListeners.getOrDefault(owner, Collections.emptySet()).remove(listener);
                 }
@@ -214,22 +210,10 @@ public class ForwardChannelManager {
                 var set = pluginToListeners.remove(owner);
                 if (set != null) {
                     listeners.removeAll(set);
-                    this.updatePreferReadBytes();
                 }
             } finally {
                 lock.unlock();
             }
-        }
-
-        private void updatePreferReadBytes() {
-            for (Listener listener : listeners) {
-                if (!(listener instanceof BytesListener)) {
-                    preferReadBytes = false;
-                    return;
-                }
-            }
-
-            preferReadBytes = true;
         }
 
         public void send(byte[] data) {

@@ -2,6 +2,7 @@ package org.by1337.btcp.server.service;
 
 
 import org.by1337.btcp.server.dedicated.DedicatedServer;
+import org.by1337.btcp.server.yaml.YamlContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -91,6 +92,22 @@ public abstract class AbstractService implements Service {
             return connection.getInputStream();
         } catch (IOException ex) {
             return null;
+        }
+    }
+
+    @Override
+    public File saveIfNotExists(String path) {
+        File file = new File(getDataFolder(), path);
+        if (!file.exists()) saveResource(path, false);
+        return file;
+    }
+
+    @Override
+    public YamlContext load(String path) {
+        try {
+            return new YamlContext(saveIfNotExists(path));
+        } catch (YamlContext.YamlParserException | IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

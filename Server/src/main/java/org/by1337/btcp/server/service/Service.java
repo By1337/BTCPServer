@@ -1,6 +1,7 @@
 package org.by1337.btcp.server.service;
 
 import org.by1337.btcp.server.dedicated.DedicatedServer;
+import org.by1337.btcp.server.yaml.YamlContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -35,4 +36,6 @@ public interface Service {
     ServiceDescriptionFile getDescription();
 
     DedicatedServer getServer();
+    File saveIfNotExists(String path);
+    YamlContext load(String path);
 }
